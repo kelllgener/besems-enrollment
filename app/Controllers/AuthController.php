@@ -2,8 +2,9 @@
 namespace App\Controllers;
 
 use App\Models\User;
+use BaseController;
 
-class AuthController {
+class AuthController extends BaseController {
     
     public function login() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -22,15 +23,16 @@ class AuthController {
                 exit();
             } else {
                 $error = "Invalid username or password";
-                require_once __DIR__ . '/../../views/auth/login.php';
+                $this->renderAuth('auth/login', ['error' => $error]);
             }
         } else {
-            require_once __DIR__ . '/../../views/auth/login.php';
+            $this->renderAuth('auth/login');
         }
     }
 
     public function logout() {
         session_destroy();
         header("Location: login");
+        exit();
     }
 }

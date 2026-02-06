@@ -1,7 +1,9 @@
 <?php
 namespace App\Controllers;
 
-class HomeController {
+use BaseController;
+
+class HomeController extends BaseController {
     public function index() {
         // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
@@ -9,9 +11,9 @@ class HomeController {
             exit();
         }
 
-        $name = $_SESSION['name'];
-
-        // Load the view from the views folder
-        require_once __DIR__ . '/../../views/home.php';
+        $this->render('home', [
+            "pageTitle" => "Dashboard - BESEMS",
+            'name' => $_SESSION['name'],
+        ]);
     }
 }
