@@ -9,7 +9,6 @@ use App\Controllers\HomeController;
 
 
 $page = $_GET['page'] ?? 'login';
-
 // Clean the path (remove trailing slashes)
 $page = rtrim($page, '/');
 
