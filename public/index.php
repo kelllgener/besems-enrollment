@@ -1,11 +1,15 @@
 <?php
 session_start();
-
-// Load the Composer Autoloader
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\Controllers\HomeController;
+// Get the requested page, default to login
+$page = $_GET['page'] ?? 'login';
 
-// Basic Routing logic
-$app = new HomeController();
-$app->index();
+if ($page === 'home') {
+    // This calls the HomeController which will then LOAD the view
+    $controller = new \App\Controllers\HomeController();
+    $controller->index();
+} elseif ($page === 'login') {
+    $controller = new \App\Controllers\AuthController();
+    $controller->login();
+}

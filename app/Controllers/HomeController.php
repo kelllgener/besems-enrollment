@@ -3,10 +3,15 @@ namespace App\Controllers;
 
 class HomeController {
     public function index() {
-        // Logic happens here
-        $name = "Student"; 
-        
-        // Pass data to the view
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            header("Location: index.php?page=login");
+            exit();
+        }
+
+        $name = $_SESSION['name'];
+
+        // Load the view from the views folder
         require_once __DIR__ . '/../../views/home.php';
     }
 }
