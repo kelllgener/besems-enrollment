@@ -18,7 +18,7 @@ class AuthController {
                 $_SESSION['role'] = $user['role'];
                 $_SESSION['name'] = $user['first_name'];
 
-                header("Location: index.php?page=home");
+                header("Location: home");
                 exit();
             } else {
                 $error = "Invalid username or password";
@@ -31,6 +31,6 @@ class AuthController {
 
     public function logout() {
         session_destroy();
-        header("Location: index.php");
+        header("Location: login");
     }
 }

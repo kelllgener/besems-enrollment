@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Don't rewrite if the file or directory exists (for CSS/JS/Images)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Send everything else to index.php
+    RewriteRule ^(.*)$ index.php?page=$1 [L,QSA]
+</IfModule>
