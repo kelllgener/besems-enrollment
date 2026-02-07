@@ -120,9 +120,6 @@
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
-                                                    <i class="bi bi-person-fill text-primary"></i>
-                                                </div>
                                                 <div>
                                                     <div class="fw-semibold">
                                                         <?= htmlspecialchars($student['first_name'] . ' ' . $student['last_name']) ?>

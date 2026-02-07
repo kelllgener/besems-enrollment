@@ -95,9 +95,10 @@ $userRole = $_SESSION['role'] ?? 'user';
         <!-- Brand -->
         <div class="p-3 border-bottom border-secondary">
             <h4 class="text-white mb-0 fw-bold">
-                <i class="bi bi-building me-2"></i>BESEMS
+                <img src="assets/images/logo.jpg" alt="Logo" class="mb-2 rounded-circle" style="width: 40px;">
+                BESEMS
             </h4>
-            <small class="text-white-50">Management System</small>
+            <small class="text-white-50">Enrollment Management System</small>
         </div>
 
         <!-- User Info -->
