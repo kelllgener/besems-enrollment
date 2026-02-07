@@ -1,7 +1,3 @@
-<?php
-$pageTitle = "Dashboard - BESEMS";
-include __DIR__ . '/../partials/header.php';
-?>
 
 <div class="container vh-100 d-flex justify-content-center align-items-center">
     <div class="card shadow" style="width: 400px;">
@@ -26,5 +22,3 @@ include __DIR__ . '/../partials/header.php';
         </div>
     </div>
 </div>
-
-<?php include __DIR__ . '/../partials/footer.php'; ?>

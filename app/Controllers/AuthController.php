@@ -1,12 +1,14 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Models\User;
-use BaseController;
 
-class AuthController extends BaseController {
-    
-    public function login() {
+class AuthController extends BaseController
+{
+
+    public function login()
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = $_POST['username'];
             $password = $_POST['password'];
@@ -30,7 +32,18 @@ class AuthController extends BaseController {
         }
     }
 
-    public function logout() {
+    public function register()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Handle registration logic here
+            // Validate input, create user, etc.
+        } else {
+            $this->renderAuth('auth/register');
+        }
+    }
+
+    public function logout()
+    {
         session_destroy();
         header("Location: login");
         exit();

@@ -1,8 +1,6 @@
 <?php
 namespace App\Controllers;
 
-use BaseController;
-
 class HomeController extends BaseController {
     public function index() {
         // Check if user is logged in
