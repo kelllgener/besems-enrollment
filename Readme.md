@@ -42,15 +42,22 @@ This project requires the following dependencies:
 * **Package Manager:** Composer
 * **Local Server:** XAMPP (Apache & MySQL)
 
-1. **Clone the repository:**
+1. **Go to your XAMPP htdocs directory:**
+   - Open File Explorer and navigate to `C:\xampp\htdocs` (or your XAMPP htdocs path).
+2. **Open Command Prompt (CMD) in this directory:**
+   - In the htdocs folder, hold Shift and right-click, then select "Open Command Window Here" or "Open PowerShell window here".
+3. **Clone the repository:**
    ```bash
-   git clone [https://github.com/kelllgener/besems-enrollment](https://github.com/kelllgener/besems-enrollment)
-2. **Navigate to the project directory:**
+   git clone https://github.com/kelllgener/besems-enrollment
+   ```
+4. **Navigate to the project directory:**
    ```bash
    cd besems-enrollment
-3. **Install the dependencies: Using Composer:**
+   ```
+5. **Install the dependencies using Composer:**
    ```bash
    composer install
+   ```
 
 ### Database Setup (XAMPP)
 To set up the project database using XAMPP, follow these steps:
