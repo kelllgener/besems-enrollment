@@ -24,20 +24,44 @@ class User
         return $result->fetch_assoc();
     }
 
-    // Create new user (for registration)
+    // Find user by email
+    public function findByEmail($email)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
+
+    // Create new guardian user (simplified)
     public function create($data)
     {
         $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-        $stmt = $this->db->prepare("INSERT INTO users (username, password, role, first_name, last_name, email) VALUES (?, ?, ?, ?, ?, ?)");
+        
+        $stmt = $this->db->prepare("
+            INSERT INTO users (username, password, email, contact_number, role, is_active) 
+            VALUES (?, ?, ?, ?, 'guardian', 1)
+        ");
+        
         $stmt->bind_param(
-            "ssssss",
+            "ssss",
             $data['username'],
             $hashedPassword,
-            $data['role'],
-            $data['first_name'],
-            $data['last_name'],
-            $data['email']
+            $data['email'],
+            $data['contact_number']
         );
+        
         return $stmt->execute();
+    }
+
+    // Get user by ID
+    public function findById($user_id)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM users WHERE user_id = ?");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
     }
 }
