@@ -1,41 +1,88 @@
 <?php
 // Define menu items based on role
 $menuItems = [
+    // Guardian Menu Items
+    [
+        'label' => 'Dashboard',
+        'icon' => 'bi-speedometer2',
+        'url' => 'guardian-dashboard',
+        'roles' => ['guardian']
+    ],
+    [
+        'label' => 'My Children',
+        'icon' => 'bi-people',
+        'url' => 'my-students',
+        'roles' => ['guardian']
+    ],
+    [
+        'label' => 'Add Child',
+        'icon' => 'bi-person-plus',
+        'url' => 'add-student',
+        'roles' => ['guardian']
+    ],
+    [
+        'label' => 'Requirements',
+        'icon' => 'bi-file-earmark-check',
+        'url' => 'requirements',
+        'roles' => ['guardian']
+    ],
+    [
+        'label' => 'Announcements',
+        'icon' => 'bi-megaphone',
+        'url' => 'announcements',
+        'roles' => ['guardian']
+    ],
+
+    // Admin Menu Items
     [
         'label' => 'Dashboard',
         'icon' => 'bi-speedometer2',
         'url' => 'dashboard',
-        'roles' => ['admin', 'user', 'student', 'teacher'] // Available to all
-    ],
-    [
-        'label' => 'Subjects',
-        'icon' => 'bi-book',
-        'url' => 'subjects',
-        'roles' => ['admin', 'teacher']
+        'roles' => ['admin']
     ],
     [
         'label' => 'Students',
         'icon' => 'bi-people',
         'url' => 'students',
-        'roles' => ['admin', 'teacher']
+        'roles' => ['admin']
     ],
     [
-        'label' => 'Teachers',
-        'icon' => 'bi-person-badge',
-        'url' => 'teachers',
+        'label' => 'Subjects',
+        'icon' => 'bi-book',
+        'url' => 'subjects',
+        'roles' => ['admin']
+    ],
+    [
+        'label' => 'Sections',
+        'icon' => 'bi-grid-3x3-gap',
+        'url' => 'sections',
+        'roles' => ['admin']
+    ],
+    [
+        'label' => 'Schedules',
+        'icon' => 'bi-calendar-event',
+        'url' => 'schedules',
+        'roles' => ['admin']
+    ],
+    [
+        'label' => 'Announcements',
+        'icon' => 'bi-megaphone',
+        'url' => 'admin-announcements',
         'roles' => ['admin']
     ],
     [
         'label' => 'Reports',
         'icon' => 'bi-graph-up',
         'url' => 'reports',
-        'roles' => ['admin', 'teacher']
+        'roles' => ['admin']
     ],
+
+    // Common
     [
         'label' => 'Settings',
         'icon' => 'bi-gear',
         'url' => 'settings',
-        'roles' => ['admin', 'user', 'student', 'teacher']
+        'roles' => ['admin', 'guardian']
     ]
 ];
 
@@ -43,7 +90,6 @@ $menuItems = [
 $currentPage = basename($_SERVER['REQUEST_URI']);
 $userRole = $_SESSION['role'] ?? 'user';
 ?>
-
 <nav id="sidebar" class="bg-dark vh-100 position-fixed">
     <div class="d-flex flex-column h-100">
         <!-- Brand -->
@@ -80,8 +126,8 @@ $userRole = $_SESSION['role'] ?? 'user';
                         $activeClass = $isActive ? 'bg-primary' : '';
                         ?>
                         <li class="nav-item mb-1">
-                            <a href="<?= htmlspecialchars($item['url']) ?>" 
-                               class="nav-link text-white d-flex align-items-center rounded <?= $activeClass ?>">
+                            <a href="<?= htmlspecialchars($item['url']) ?>"
+                                class="nav-link text-white d-flex align-items-center rounded <?= $activeClass ?>">
                                 <i class="bi <?= $item['icon'] ?> me-2"></i>
                                 <span><?= htmlspecialchars($item['label']) ?></span>
                             </a>

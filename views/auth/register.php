@@ -25,7 +25,6 @@
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       <form action="register" method="POST">
-          <!-- ...existing form code... -->
           <div class="mb-3">
               <label class="form-label fw-semibold">
                   Username <span class="text-danger">*</span>

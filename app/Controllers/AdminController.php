@@ -4,9 +4,9 @@ namespace App\Controllers;
 
 use App\Models\Dashboard;
 
-class DashboardController extends BaseController
+class AdminController extends BaseController
 {
-    public function index()
+    public function dashboard()
     {
         // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
@@ -26,7 +26,7 @@ class DashboardController extends BaseController
             $recent_students = $dashboardModel->getRecentStudents(5);
             
             // Render the dashboard view
-            $this->render('dashboard', [
+            $this->renderAdmin('dashboard', [
                 'pageTitle' => 'BESEMS - Dashboard',
                 'name' => $name,
                 'stats' => $stats,
@@ -38,7 +38,7 @@ class DashboardController extends BaseController
             // Handle errors gracefully
             error_log("Dashboard error: " . $e->getMessage());
             
-            $this->render('dashboard', [
+            $this->renderAdmin('admin/dashboard', [
                 'pageTitle' => 'BESEMS - Dashboard',
                 'name' => $name,
                 'stats' => [

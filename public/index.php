@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 session_start();
@@ -10,7 +11,7 @@ $page = rtrim($page, '/');
 
 switch ($page) {
     case 'dashboard':
-        (new DashboardController())->index();
+        $_SESSION['role'] === 'admin' ? (new AdminController())->dashboard() : (new GuardianController())->dashboard();
         break;
     case 'login':
         (new AuthController())->login();
