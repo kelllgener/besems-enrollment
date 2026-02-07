@@ -1,5 +1,5 @@
 <?php
-// Define menu items based on role
+
 $menuItems = [
     // Guardian Menu Items
     [

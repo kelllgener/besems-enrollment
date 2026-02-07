@@ -1,33 +1,51 @@
+#sidebar {
+  width: 260px;
+  transition: all 0.3s;
+}
+
+#content {
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  transition: all 0.3s;
+}
+
+@media (max-width: 768px) {
   #sidebar {
-            width: 260px;
-            transition: all 0.3s;
-        }
-        
-        #content {
-            margin-left: 260px;
-            width: calc(100% - 260px);
-            transition: all 0.3s;
-        }
-        
-        @media (max-width: 768px) {
-            #sidebar {
-                margin-left: -260px;
-            }
-            
-            #sidebar.active {
-                margin-left: 0;
-            }
-            
-            #content {
-                margin-left: 0;
-                width: 100%;
-            }
-            
-            #content.active {
-                margin-left: 260px;
-            }
-        }
-        
-        .sidebar-toggle {
-            cursor: pointer;
-        }
+    margin-left: -260px;
+  }
+
+  #sidebar.active {
+    margin-left: 0;
+  }
+
+  #content {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  #content.active {
+    margin-left: 260px;
+  }
+}
+
+.sidebar-toggle {
+  cursor: pointer;
+}
+
+.pagination .page-link {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  background: transparent;
+}
+.pagination .page-item.active .page-link {
+  background-color: #0d6efd;
+  color: white;
+}
+/* Hover effects for table rows */
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.02);
+}

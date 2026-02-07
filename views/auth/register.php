@@ -84,7 +84,7 @@
               </label>
           </div>
           <div class="d-grid gap-2">
-              <button type="submit" class="btn btn-primary btn-lg">
+              <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
                   <i class="bi bi-person-plus-fill me-2"></i>Create Guardian Account
               </button>
               <a href="login" class="btn btn-link text-decoration-none">

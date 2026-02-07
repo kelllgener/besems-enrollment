@@ -40,7 +40,7 @@
     </div>
     
     <div class="d-grid gap-2">
-        <button type="submit" class="btn btn-primary btn-lg">
+        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
             <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
         </button>
     </div>
@@ -50,7 +50,7 @@
 
 <div class="text-center">
     <p class="text-muted mb-2">Don't have an account?</p>
-    <a href="register" class="btn btn-outline-primary">
+    <a href="register" class="btn btn-outline-primary rounded-pill px-4 shadow-sm">
         <i class="bi bi-person-plus me-2"></i>Create Guardian Account
     </a>
 </div>
