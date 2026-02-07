@@ -47,54 +47,41 @@ class Student
     }
 
     // Get students with filters and pagination
+    // Get students with filters and pagination (with debugging)
     public function getStudentsWithFilters($guardian_id, $search = '', $status_filter = '', $enrollment_filter = '', $limit = 10, $offset = 0)
     {
-        // Build the WHERE clause
-        $where_conditions = ["s.guardian_id = ?"];
-        $params = [$guardian_id];
-        $types = "i";
+        // 1. Sanitize pagination inputs
+        $offset = max(0, (int)$offset);
+        $limit = max(1, (int)$limit);
+        $guardian_id = (int)$guardian_id;
 
-        // Search filter
+        // 2. Build the base WHERE conditions
+        $where = "WHERE s.guardian_id = {$guardian_id}";
+
         if (!empty($search)) {
-            $where_conditions[] = "(s.lrn LIKE ? OR s.first_name LIKE ? OR s.last_name LIKE ? OR CONCAT(s.first_name, ' ', s.last_name) LIKE ?)";
-            $search_param = "%{$search}%";
-            $params[] = $search_param;
-            $params[] = $search_param;
-            $params[] = $search_param;
-            $params[] = $search_param;
-            $types .= "ssss";
+            $search = $this->db->real_escape_string($search);
+            $where .= " AND (s.lrn LIKE '%{$search}%' OR s.first_name LIKE '%{$search}%' OR s.last_name LIKE '%{$search}%' OR CONCAT(s.first_name, ' ', s.last_name) LIKE '%{$search}%')";
         }
 
-        // Student status filter
         if (!empty($status_filter)) {
-            $where_conditions[] = "s.student_status = ?";
-            $params[] = $status_filter;
-            $types .= "s";
+            $status_filter = $this->db->real_escape_string($status_filter);
+            $where .= " AND s.student_status = '{$status_filter}'";
         }
 
-        // Enrollment status filter
         if (!empty($enrollment_filter)) {
-            $where_conditions[] = "sr.enrollment_status = ?";
-            $params[] = $enrollment_filter;
-            $types .= "s";
+            $enrollment_filter = $this->db->real_escape_string($enrollment_filter);
+            $where .= " AND sr.enrollment_status = '{$enrollment_filter}'";
         }
 
-        $where_clause = implode(" AND ", $where_conditions);
+        // 3. Get total count first
+        $count_sql = "SELECT COUNT(*) as total FROM students s 
+                  LEFT JOIN student_requirements sr ON s.student_id = sr.student_id 
+                  {$where}";
 
-        // Get total count
-        $count_sql = "
-        SELECT COUNT(*) as total
-        FROM students s
-        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
-        WHERE {$where_clause}
-    ";
+        $count_result = $this->db->query($count_sql);
+        $total = ($count_result) ? $count_result->fetch_assoc()['total'] : 0;
 
-        $count_stmt = $this->db->prepare($count_sql);
-        $count_stmt->bind_param($types, ...$params);
-        $count_stmt->execute();
-        $total = $count_stmt->get_result()->fetch_assoc()['total'];
-
-        // Get paginated results
+        // 4. Get the actual data
         $sql = "
         SELECT 
             s.*,
@@ -108,28 +95,23 @@ class Student
         LEFT JOIN sections sec ON s.assigned_section_id = sec.section_id
         LEFT JOIN grade_levels gl ON sec.grade_id = gl.grade_id
         LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
-        WHERE {$where_clause}
-        ORDER BY s.created_at DESC
-        LIMIT ? OFFSET ?
+        {$where}
+        ORDER BY s.created_at DESC 
+        LIMIT {$limit} OFFSET {$offset}
     ";
 
-        $params[] = $limit;
-        $params[] = $offset;
-        $types .= "ii";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $result = $this->db->query($sql);
 
         $students = [];
-        while ($row = $result->fetch_assoc()) {
-            $students[] = $row;
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $students[] = $row;
+            }
         }
 
         return [
             'students' => $students,
-            'total' => $total
+            'total' => (int)$total
         ];
     }
 
