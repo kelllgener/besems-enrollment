@@ -24,6 +24,13 @@ switch ($page) {
         (new AuthController())->logout();
         break;
 
+    // Admin routes
+
+    // Guardian routes
+    case 'add-student':
+        (new GuardianController())->addStudent();
+        break;
+
     default:
         http_response_code(404);
         echo "404 - Page not found";

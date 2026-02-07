@@ -6,7 +6,9 @@ class StudentController extends BaseController
 {
     public function index()
     {
+        
     }
 
 }
+
 ?>
