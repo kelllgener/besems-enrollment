@@ -146,7 +146,7 @@ class GuardianController extends BaseController
             $this->renderGuardian('add-student', [
                 'pageTitle' => 'Add Student - BESEMS',
                 'errors' => $errors,
-                'old' => $_POST
+                'old' => $_POST,
             ]);
         } else {
             $this->renderGuardian('add-student', [

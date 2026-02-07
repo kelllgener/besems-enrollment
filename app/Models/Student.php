@@ -103,7 +103,7 @@ class Student
 
         return $result->fetch_assoc();
     }
-    
+
     // Find student by LRN
     public function findByLRN($lrn)
     {
@@ -114,6 +114,7 @@ class Student
         return $result->fetch_assoc();
     }
 
+    // Create new student
     // Create new student
     public function createStudent($data)
     {
@@ -139,39 +140,41 @@ class Student
         )
     ");
 
+        // Count: 31 parameters (32nd is hardcoded 'Active')
+        // Type string needs: 1 'i' for integer + 30 's' for strings = 31 total
         $stmt->bind_param(
-            "isssssssssssssssssssssssssssss",
-            $data['guardian_id'],
-            $data['lrn'],
-            $data['first_name'],
-            $data['middle_name'],
-            $data['last_name'],
-            $data['name_extension'],
-            $data['date_of_birth'],
-            $data['place_of_birth'],
-            $data['gender'],
-            $data['mother_tongue'],
-            $data['religion'],
-            $data['indigenous_people'],
-            $data['house_number'],
-            $data['street_name'],
-            $data['barangay'],
-            $data['city_municipality'],
-            $data['province'],
-            $data['region'],
-            $data['zip_code'],
-            $data['father_name'],
-            $data['father_occupation'],
-            $data['father_contact'],
-            $data['mother_name'],
-            $data['mother_occupation'],
-            $data['mother_contact'],
-            $data['guardian_name'],
-            $data['guardian_relationship'],
-            $data['guardian_occupation'],
-            $data['enrollment_type'],
-            $data['previous_school'],
-            $data['previous_grade_level']
+            "issssssssssssssssssssssssssssss", // i + 30 s's = 31 characters
+            $data['guardian_id'],           // 1 - i (integer)
+            $data['lrn'],                   // 2 - s
+            $data['first_name'],            // 3 - s
+            $data['middle_name'],           // 4 - s
+            $data['last_name'],             // 5 - s
+            $data['name_extension'],        // 6 - s
+            $data['date_of_birth'],         // 7 - s
+            $data['place_of_birth'],        // 8 - s
+            $data['gender'],                // 9 - s
+            $data['mother_tongue'],         // 10 - s
+            $data['religion'],              // 11 - s
+            $data['indigenous_people'],     // 12 - s
+            $data['house_number'],          // 13 - s
+            $data['street_name'],           // 14 - s
+            $data['barangay'],              // 15 - s
+            $data['city_municipality'],     // 16 - s
+            $data['province'],              // 17 - s
+            $data['region'],                // 18 - s
+            $data['zip_code'],              // 19 - s
+            $data['father_name'],           // 20 - s
+            $data['father_occupation'],     // 21 - s
+            $data['father_contact'],        // 22 - s
+            $data['mother_name'],           // 23 - s
+            $data['mother_occupation'],     // 24 - s
+            $data['mother_contact'],        // 25 - s
+            $data['guardian_name'],         // 26 - s
+            $data['guardian_relationship'], // 27 - s
+            $data['guardian_occupation'],   // 28 - s
+            $data['enrollment_type'],       // 29 - s
+            $data['previous_school'],       // 30 - s
+            $data['previous_grade_level']   // 31 - s
         );
 
         if ($stmt->execute()) {
