@@ -5,7 +5,7 @@ $menuItems = [
     [
         'label' => 'Dashboard',
         'icon' => 'bi-speedometer2',
-        'url' => 'guardian-dashboard',
+        'url' => 'dashboard',
         'roles' => ['guardian']
     ],
     [

@@ -28,7 +28,7 @@
                     <span class="d-none d-md-inline">Welcome, </span>
                     <strong><?= htmlspecialchars($_SESSION['name'] ?? 'User') ?></strong>
                 </span>
-                <span class="badge bg-success">
+                <span class="badge bg-success d-flex align-items-center">
                     <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>Online
                 </span>
             </div>

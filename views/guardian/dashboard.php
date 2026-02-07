@@ -1,10 +1,10 @@
 <div class="row g-4">
     <!-- Welcome Card -->
     <div class="col-12">
-        <div class="card shadow-sm border-0 bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-            <div class="card-body p-4 text-white">
-                <h2 class="mb-3">
-                    <i class="bi bi-house-heart me-2"></i>Welcome back, <?= htmlspecialchars($name) ?>!
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h2 class="text-primary mb-3">
+                    <i class="bi bi-emoji-smile me-2"></i>Welcome back, <?= htmlspecialchars($name) ?>!
                 </h2>
                 <p class="mb-0 opacity-75">Manage your children's enrollment and track their academic journey.</p>
             </div>
