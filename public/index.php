@@ -11,7 +11,8 @@ $page = rtrim($page, '/');
 
 switch ($page) {
     case 'dashboard':
-        $_SESSION['role'] === 'admin' ? (new AdminController())->dashboard() : (new GuardianController())->dashboard();
+        $dashboardController = new DashboardController();
+        $_SESSION['role'] === 'admin' ? $dashboardController->adminDashboard() : $dashboardController->guardianDashboard();
         break;
     case 'login':
         (new AuthController())->login();
