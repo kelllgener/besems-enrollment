@@ -38,6 +38,58 @@ class GuardianController extends BaseController
         ]);
     }
 
+    public function myStudents()
+    {
+        // Check if user is logged in and is a guardian
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
+            header('Location: login');
+            exit;
+        }
+
+        $guardian_id = $_SESSION['user_id'];
+        $studentModel = new Student();
+
+        // Get filter parameters
+        $search = $_GET['search'] ?? '';
+        $status_filter = $_GET['status'] ?? '';
+        $enrollment_filter = $_GET['enrollment'] ?? '';
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $per_page = 10;
+        $offset = ($page - 1) * $per_page;
+
+        // Get filtered students with pagination
+        $result = $studentModel->getStudentsWithFilters(
+            $guardian_id,
+            $search,
+            $status_filter,
+            $enrollment_filter,
+            $per_page,
+            $offset
+        );
+
+        $students = $result['students'];
+        $total_records = $result['total'];
+        $total_pages = ceil($total_records / $per_page);
+
+        // Handle CSV export
+        if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+            $this->exportStudentsToCSV($students);
+            exit;
+        }
+
+        $this->renderGuardian('my-students', [
+            'pageTitle' => 'My Children - BESEMS',
+            'students' => $students,
+            'search' => $search,
+            'status_filter' => $status_filter,
+            'enrollment_filter' => $enrollment_filter,
+            'current_page' => $page,
+            'total_pages' => $total_pages,
+            'total_records' => $total_records,
+            'per_page' => $per_page
+        ]);
+    }
+
     public function addStudent()
     {
         // Check if user is logged in and is a guardian
@@ -52,8 +104,15 @@ class GuardianController extends BaseController
 
             // Validate required fields
             $required_fields = [
-                'lrn', 'first_name', 'last_name', 'date_of_birth', 'gender',
-                'barangay', 'city_municipality', 'province', 'guardian_relationship'
+                'lrn',
+                'first_name',
+                'last_name',
+                'date_of_birth',
+                'gender',
+                'barangay',
+                'city_municipality',
+                'province',
+                'guardian_relationship'
             ];
 
             foreach ($required_fields as $field) {
@@ -78,7 +137,7 @@ class GuardianController extends BaseController
                 $dob = new \DateTime($_POST['date_of_birth']);
                 $today = new \DateTime('today');
                 $age = $dob->diff($today)->y;
-                
+
                 if ($age < 5 || $age > 15) {
                     $errors[] = "Student age must be between 5 and 15 years old for elementary enrollment";
                 }
@@ -133,7 +192,7 @@ class GuardianController extends BaseController
                 if ($student_id) {
                     // Create student requirements record
                     $studentModel->createStudentRequirements($student_id);
-                    
+
                     $_SESSION['student_added_success'] = "Student added successfully! Please upload the required documents.";
                     header("Location: requirements?student_id=" . $student_id);
                     exit();
@@ -153,5 +212,63 @@ class GuardianController extends BaseController
                 'pageTitle' => 'Add Student - BESEMS'
             ]);
         }
+    }
+
+
+    private function exportStudentsToCSV($students)
+    {
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="my_students_' . date('Y-m-d') . '.csv"');
+
+        $output = fopen('php://output', 'w');
+
+        // CSV Headers
+        fputcsv($output, [
+            'LRN',
+            'Full Name',
+            'Gender',
+            'Age',
+            'Date of Birth',
+            'Grade Level',
+            'Section',
+            'Enrollment Status',
+            'Student Status',
+            'Address',
+            'Father Name',
+            'Mother Name',
+            'Contact Number'
+        ]);
+
+        // CSV Data
+        foreach ($students as $student) {
+            $full_name = trim($student['first_name'] . ' ' .
+                ($student['middle_name'] ?? '') . ' ' .
+                $student['last_name'] . ' ' .
+                ($student['name_extension'] ?? ''));
+
+            $address = trim(($student['house_number'] ?? '') . ' ' .
+                ($student['street_name'] ?? '') . ', ' .
+                $student['barangay'] . ', ' .
+                $student['city_municipality'] . ', ' .
+                $student['province']);
+
+            fputcsv($output, [
+                $student['lrn'],
+                $full_name,
+                $student['gender'],
+                $student['age'],
+                $student['date_of_birth'],
+                $student['grade_name'] ?? 'Not Assigned',
+                $student['section_name'] ?? 'Not Assigned',
+                $student['enrollment_status'] ?? 'Not Enrolled',
+                $student['student_status'],
+                $address,
+                $student['father_name'] ?? 'N/A',
+                $student['mother_name'] ?? 'N/A',
+                $student['father_contact'] ?? $student['mother_contact'] ?? 'N/A'
+            ]);
+        }
+
+        fclose($output);
     }
 }

@@ -46,6 +46,93 @@ class Student
         return $students;
     }
 
+    // Get students with filters and pagination
+    public function getStudentsWithFilters($guardian_id, $search = '', $status_filter = '', $enrollment_filter = '', $limit = 10, $offset = 0)
+    {
+        // Build the WHERE clause
+        $where_conditions = ["s.guardian_id = ?"];
+        $params = [$guardian_id];
+        $types = "i";
+
+        // Search filter
+        if (!empty($search)) {
+            $where_conditions[] = "(s.lrn LIKE ? OR s.first_name LIKE ? OR s.last_name LIKE ? OR CONCAT(s.first_name, ' ', s.last_name) LIKE ?)";
+            $search_param = "%{$search}%";
+            $params[] = $search_param;
+            $params[] = $search_param;
+            $params[] = $search_param;
+            $params[] = $search_param;
+            $types .= "ssss";
+        }
+
+        // Student status filter
+        if (!empty($status_filter)) {
+            $where_conditions[] = "s.student_status = ?";
+            $params[] = $status_filter;
+            $types .= "s";
+        }
+
+        // Enrollment status filter
+        if (!empty($enrollment_filter)) {
+            $where_conditions[] = "sr.enrollment_status = ?";
+            $params[] = $enrollment_filter;
+            $types .= "s";
+        }
+
+        $where_clause = implode(" AND ", $where_conditions);
+
+        // Get total count
+        $count_sql = "
+        SELECT COUNT(*) as total
+        FROM students s
+        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+        WHERE {$where_clause}
+    ";
+
+        $count_stmt = $this->db->prepare($count_sql);
+        $count_stmt->bind_param($types, ...$params);
+        $count_stmt->execute();
+        $total = $count_stmt->get_result()->fetch_assoc()['total'];
+
+        // Get paginated results
+        $sql = "
+        SELECT 
+            s.*,
+            gl.grade_name,
+            sec.section_name,
+            sec.room_number,
+            sr.enrollment_status,
+            sr.remarks,
+            TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
+        FROM students s
+        LEFT JOIN sections sec ON s.assigned_section_id = sec.section_id
+        LEFT JOIN grade_levels gl ON sec.grade_id = gl.grade_id
+        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+        WHERE {$where_clause}
+        ORDER BY s.created_at DESC
+        LIMIT ? OFFSET ?
+    ";
+
+        $params[] = $limit;
+        $params[] = $offset;
+        $types .= "ii";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $students = [];
+        while ($row = $result->fetch_assoc()) {
+            $students[] = $row;
+        }
+
+        return [
+            'students' => $students,
+            'total' => $total
+        ];
+    }
+
     // Get student count by status for a guardian
     public function getStudentCountsByStatus($guardian_id)
     {

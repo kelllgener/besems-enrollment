@@ -181,7 +181,7 @@
                 </h5>
             </div>
             <div class="card-body">
-                <canvas id="enrollmentChart"></canvas>
+                <canvas class="p-5" id="enrollmentChart"></canvas>
 
                 <div class="mt-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">

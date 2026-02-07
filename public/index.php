@@ -27,6 +27,9 @@ switch ($page) {
     // Admin routes
 
     // Guardian routes
+    case 'my-students':
+        (new GuardianController())->myStudents();
+        break;
     case 'add-student':
         (new GuardianController())->addStudent();
         break;

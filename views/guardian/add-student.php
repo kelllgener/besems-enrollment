@@ -8,7 +8,7 @@
                 </h3>
                 <p class="text-muted mb-0">Complete the form below to enroll your child</p>
             </div>
-            <a href="guardian-dashboard" class="btn btn-outline-secondary">
+            <a href="dashboard" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
             </a>
         </div>
