@@ -26,7 +26,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-muted mb-1">Total Students</h6>
-                        <h3 class="mb-0"><?= number_format($stats['total_students'] ?? 0) ?></h3>
+                        <h3 class="mb-0"><?= number_format($stats['total_students']) ?></h3>
                         <small class="text-success">
                             <i class="bi bi-arrow-up"></i> Active enrollments
                         </small>
@@ -45,7 +45,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-muted mb-1">Pending Enrollments</h6>
-                        <h3 class="mb-0"><?= number_format($stats['pending_enrollments'] ?? 0) ?></h3>
+                        <h3 class="mb-0"><?= number_format($stats['pending_enrollments']) ?></h3>
                         <small class="text-warning">
                             <i class="bi bi-clock"></i> Awaiting approval
                         </small>
@@ -64,7 +64,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-muted mb-1">Total Sections</h6>
-                        <h3 class="mb-0"><?= number_format($stats['total_sections'] ?? 0) ?></h3>
+                        <h3 class="mb-0"><?= number_format($stats['total_sections']) ?></h3>
                         <small class="text-success">
                             <i class="bi bi-door-open"></i> Active classes
                         </small>
@@ -83,7 +83,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="text-muted mb-1">Total Subjects</h6>
-                        <h3 class="mb-0"><?= number_format($stats['total_subjects'] ?? 0) ?></h3>
+                        <h3 class="mb-0"><?= number_format($stats['total_subjects']) ?></h3>
                         <small class="text-info">
                             <i class="bi bi-book"></i> Curriculum
                         </small>
@@ -217,10 +217,10 @@
     new Chart(studentsPerGradeCtx, {
         type: 'bar',
         data: {
-            labels: <?= json_encode(array_column($students_per_grade ?? [], 'grade_name')) ?>,
+            labels: <?= json_encode(array_column($students_per_grade, 'grade_name')) ?>,
             datasets: [{
                 label: 'Number of Students',
-                data: <?= json_encode(array_column($students_per_grade ?? [], 'student_count')) ?>,
+                data: <?= json_encode(array_column($students_per_grade, 'student_count')) ?>,
                 backgroundColor: [
                     'rgba(54, 162, 235, 0.7)',
                     'rgba(75, 192, 192, 0.7)',
@@ -251,29 +251,18 @@
                 tooltip: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     padding: 12,
-                    titleFont: {
-                        size: 14
-                    },
-                    bodyFont: {
-                        size: 13
-                    }
+                    titleFont: { size: 14 },
+                    bodyFont: { size: 13 }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
-                    },
-                    grid: {
-                        display: true,
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
+                    ticks: { stepSize: 1 },
+                    grid: { display: true, color: 'rgba(0, 0, 0, 0.05)' }
                 },
                 x: {
-                    grid: {
-                        display: false
-                    }
+                    grid: { display: false }
                 }
             }
         }
@@ -287,9 +276,9 @@
             labels: ['Approved', 'Pending', 'Declined'],
             datasets: [{
                 data: [
-                    <?= $enrollment_status['approved'] ?? 0 ?>,
-                    <?= $enrollment_status['pending'] ?? 0 ?>,
-                    <?= $enrollment_status['declined'] ?? 0 ?>
+                    <?= $enrollment_status['approved'] ?>,
+                    <?= $enrollment_status['pending'] ?>,
+                    <?= $enrollment_status['declined'] ?>
                 ],
                 backgroundColor: [
                     'rgba(75, 192, 192, 0.8)',
@@ -310,12 +299,7 @@
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        font: {
-                            size: 12
-                        }
-                    }
+                    labels: { padding: 15, font: { size: 12 } }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
