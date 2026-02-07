@@ -4,7 +4,7 @@ $menuItems = [
     [
         'label' => 'Dashboard',
         'icon' => 'bi-speedometer2',
-        'url' => 'home',
+        'url' => 'dashboard',
         'roles' => ['admin', 'user', 'student', 'teacher'] // Available to all
     ],
     [
@@ -62,8 +62,8 @@ $userRole = $_SESSION['role'] ?? 'user';
                 </div>
                 <div class="flex-grow-1 text-truncate">
                     <div class="text-white fw-semibold small text-truncate"><?= htmlspecialchars($_SESSION['name'] ?? 'User') ?></div>
-                    <div class="text-white-50 small text-capitalize">
-                        <i class="bi bi-circle-fill text-success" style="font-size: 0.5rem;"></i>
+                    <div class="text-white-50 d-flex align-items-center small text-capitalize">
+                        <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>
                         <?= htmlspecialchars($userRole) ?>
                     </div>
                 </div>

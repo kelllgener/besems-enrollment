@@ -1,7 +1,7 @@
 <?php
 namespace App\Controllers;
 
-class HomeController extends BaseController {
+class DashboardController extends BaseController {
     public function index() {
         // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
@@ -9,7 +9,7 @@ class HomeController extends BaseController {
             exit();
         }
 
-        $this->render('home', [
+        $this->render('dashboard', [
             "pageTitle" => "Dashboard - BESEMS",
             'name' => $_SESSION['name'],
         ]);
