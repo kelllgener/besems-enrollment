@@ -1,7 +1,3 @@
-<?php
-$pageTitle = "Dashboard - BESEMS";
-include __DIR__ . '/partials/header.php';
-?>
 
 <div class="container mt-5">
     <div class="card shadow">
@@ -12,4 +8,3 @@ include __DIR__ . '/partials/header.php';
         </div>
     </div>
 </div>
-<?php include __DIR__ . '/partials/footer.php'; ?>
