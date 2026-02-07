@@ -324,49 +324,16 @@
 </div>
 </div>
 
+
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    // Enrollment Status Doughnut Chart
-    const ctx = document.getElementById('enrollmentChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Approved', 'Pending', 'For Review', 'Declined'],
-            datasets: [{
-                data: [
-                    <?= $enrollment_counts['approved'] ?? 0 ?>,
-                    <?= $enrollment_counts['pending'] ?? 0 ?>,
-                    <?= $enrollment_counts['for_review'] ?? 0 ?>,
-                    <?= $enrollment_counts['declined'] ?? 0 ?>
-                ],
-                backgroundColor: [
-                    'rgba(75, 192, 192, 0.8)',
-                    'rgba(255, 206, 86, 0.8)',
-                    'rgba(54, 162, 235, 0.8)',
-                    'rgba(255, 99, 132, 0.8)'
-                ],
-                borderColor: [
-                    'rgba(75, 192, 192, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 99, 132, 1)'
-                ],
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12
-                }
-            }
-        }
-    });
+    // Pass PHP data to JS variables for chart
+    const guardianEnrollmentStatusData = {
+        approved: <?= $enrollment_counts['approved'] ?? 0 ?>,
+        pending: <?= $enrollment_counts['pending'] ?? 0 ?>,
+        for_review: <?= $enrollment_counts['for_review'] ?? 0 ?>,
+        declined: <?= $enrollment_counts['declined'] ?? 0 ?>
+    };
 </script>
+<script src="assets/js/app.js"></script>
