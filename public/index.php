@@ -33,6 +33,9 @@ switch ($page) {
     case 'add-student':
         (new GuardianController())->addStudent();
         break;
+    case 'requirements':
+        (new GuardianController())->requirements();
+        break;
 
     default:
         http_response_code(404);

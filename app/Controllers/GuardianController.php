@@ -349,7 +349,7 @@ class GuardianController extends BaseController
             unset($_SESSION['student_added_success']);
         }
 
-        $this->renderGuardian('guardian/requirements', [
+        $this->renderGuardian('requirements', [
             'pageTitle' => 'Student Requirements - BESEMS',
             'all_students' => $all_students,
             'student' => $student,
