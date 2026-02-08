@@ -469,4 +469,78 @@ class GuardianController extends BaseController
             'error_message' => $error_message
         ]);
     }
+
+    public function announcements()
+    {
+        // Check if user is logged in and is a guardian
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
+            header('Location: login');
+            exit;
+        }
+
+        $announcementModel = new Announcement();
+
+        // Get filter parameters
+        $type_filter = $_GET['type'] ?? '';
+        $search = $_GET['search'] ?? '';
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $per_page = 9;
+        $offset = ($page - 1) * $per_page;
+
+        // Get filtered announcements with pagination
+        $result = $announcementModel->getAnnouncementsWithFilters(
+            $type_filter,
+            $search,
+            $per_page,
+            $offset
+        );
+
+        $announcements = $result['announcements'];
+        $total_records = $result['total'];
+        $total_pages = ceil($total_records / $per_page);
+
+        // Get counts by type
+        $counts_by_type = $announcementModel->getAnnouncementCountsByType();
+
+        $this->render('announcements', [
+            'pageTitle' => 'Announcements - BESEMS',
+            'announcements' => $announcements,
+            'type_filter' => $type_filter,
+            'search' => $search,
+            'current_page' => $page,
+            'total_pages' => $total_pages,
+            'total_records' => $total_records,
+            'counts_by_type' => $counts_by_type
+        ]);
+    }
+
+    public function viewAnnouncement()
+    {
+        // Check if user is logged in and is a guardian
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
+            header('Location: login');
+            exit;
+        }
+
+        $announcement_id = $_GET['id'] ?? null;
+
+        if (!$announcement_id) {
+            header('Location: announcements');
+            exit;
+        }
+
+        $announcementModel = new Announcement();
+        $announcement = $announcementModel->getAnnouncementById($announcement_id);
+
+        if (!$announcement) {
+            $_SESSION['error'] = "Announcement not found.";
+            header('Location: announcements');
+            exit;
+        }
+
+        $this->render('view-announcement', [
+            'pageTitle' => 'View Announcement - BESEMS',
+            'announcement' => $announcement
+        ]);
+    }
 }

@@ -43,9 +43,9 @@ switch ($page) {
     case 'requirements':
         (new GuardianController())->requirements();
         break;
-    // case 'announcements':
-    //     (new GuardianController())->announcements();
-    //     break;
+    case 'announcements':
+        (new GuardianController())->announcements();
+        break;
     case 'settings':
         (new GuardianController())->settings();
         break;
