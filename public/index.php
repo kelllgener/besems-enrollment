@@ -10,10 +10,8 @@ $page = $_GET['page'] ?? 'login';
 $page = rtrim($page, '/');
 
 switch ($page) {
-    case 'dashboard':
-        $dashboardController = new DashboardController();
-        $_SESSION['role'] === 'admin' ? $dashboardController->adminDashboard() : $dashboardController->guardianDashboard();
-        break;
+
+    // Authentication routes
     case 'login':
         (new AuthController())->login();
         break;
@@ -24,7 +22,13 @@ switch ($page) {
         (new AuthController())->logout();
         break;
 
-    // Admin routes
+
+    // Dashboard route
+    case 'dashboard':
+        $dashboardController = new DashboardController();
+        $_SESSION['role'] === 'admin' ? $dashboardController->adminDashboard() : $dashboardController->guardianDashboard();
+        break;
+
 
     // Guardian routes
     case 'my-students':
@@ -36,9 +40,19 @@ switch ($page) {
     case 'requirements':
         (new GuardianController())->requirements();
         break;
+    case 'announcements':
+        (new GuardianController())->announcements();
+        break;
+    case 'settings':
+        (new GuardianController())->settings();
+        break;
 
     default:
         http_response_code(404);
         echo "404 - Page not found";
         break;
+
+
+    // Admin routes
+
 }

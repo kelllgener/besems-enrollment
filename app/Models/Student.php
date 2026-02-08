@@ -193,8 +193,6 @@ class Student
         )
     ");
 
-        // Count: 31 parameters (32nd is hardcoded 'Active')
-        // Type string needs: 1 'i' for integer + 30 's' for strings = 31 total
         $stmt->bind_param(
             "issssssssssssssssssssssssssssss", // i + 30 s's = 31 characters
             $data['guardian_id'],           // 1 - i (integer)
