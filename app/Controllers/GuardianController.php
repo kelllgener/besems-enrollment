@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Student;
 use App\Models\Announcement;
+use App\Models\Requirement;
 
 class GuardianController extends BaseController
 {
@@ -98,6 +99,8 @@ class GuardianController extends BaseController
             exit;
         }
 
+        $requirementModel = new Requirement();
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors = [];
             $studentModel = new Student();
@@ -190,8 +193,7 @@ class GuardianController extends BaseController
                 $student_id = $studentModel->createStudent($data);
 
                 if ($student_id) {
-                    // Create student requirements record
-                    $studentModel->createStudentRequirements($student_id);
+                    $requirementModel->createStudentRequirements($student_id);
 
                     $_SESSION['student_added_success'] = "Student added successfully! Please upload the required documents.";
                     header("Location: requirements?student_id=" . $student_id);
@@ -280,6 +282,7 @@ class GuardianController extends BaseController
             exit;
         }
 
+        $requirementModel = new Requirement();
         $guardian_id = $_SESSION['user_id'];
         $studentModel = new Student();
 
@@ -331,7 +334,7 @@ class GuardianController extends BaseController
                 }
 
                 // Update requirements
-                if ($studentModel->updateRequirements($student_id, $requirements)) {
+                if ($requirementModel->updateRequirements($student_id, $requirements)) {
                     $success_message = "Requirements updated successfully! " .
                         ($all_required_submitted ? "Your enrollment is now ready for admin review." : "Please complete all required documents.");
 

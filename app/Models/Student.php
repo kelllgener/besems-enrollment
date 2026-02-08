@@ -46,8 +46,36 @@ class Student
         return $students;
     }
 
+    // Get all students for requirements dropdown
+    public function getStudentsListByGuardian($guardian_id)
+    {
+        $stmt = $this->db->prepare("
+        SELECT 
+            s.student_id,
+            s.lrn,
+            s.first_name,
+            s.last_name,
+            sr.enrollment_status,
+            TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
+        FROM students s
+        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+        WHERE s.guardian_id = ?
+        ORDER BY s.first_name ASC
+    ");
+
+        $stmt->bind_param("i", $guardian_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $students = [];
+        while ($row = $result->fetch_assoc()) {
+            $students[] = $row;
+        }
+
+        return $students;
+    }
+
     // Get students with filters and pagination
-    // Get students with filters and pagination (with debugging)
     public function getStudentsWithFilters($guardian_id, $search = '', $status_filter = '', $enrollment_filter = '', $limit = 10, $offset = 0)
     {
         // 1. Sanitize pagination inputs
@@ -115,49 +143,6 @@ class Student
         ];
     }
 
-    // Get student count by status for a guardian
-    public function getStudentCountsByStatus($guardian_id)
-    {
-        $stmt = $this->db->prepare("
-            SELECT 
-                COUNT(*) as total,
-                SUM(CASE WHEN student_status = 'Active' THEN 1 ELSE 0 END) as active,
-                SUM(CASE WHEN student_status = 'Inactive' THEN 1 ELSE 0 END) as inactive,
-                SUM(CASE WHEN student_status = 'Transferred' THEN 1 ELSE 0 END) as transferred,
-                SUM(CASE WHEN student_status = 'Graduated' THEN 1 ELSE 0 END) as graduated
-            FROM students
-            WHERE guardian_id = ?
-        ");
-
-        $stmt->bind_param("i", $guardian_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        return $result->fetch_assoc();
-    }
-
-    // Get enrollment status counts for a guardian
-    public function getEnrollmentStatusCounts($guardian_id)
-    {
-        $stmt = $this->db->prepare("
-            SELECT 
-                COUNT(CASE WHEN sr.enrollment_status = 'Pending' THEN 1 END) as pending,
-                COUNT(CASE WHEN sr.enrollment_status = 'For Review' THEN 1 END) as for_review,
-                COUNT(CASE WHEN sr.enrollment_status = 'Approved' THEN 1 END) as approved,
-                COUNT(CASE WHEN sr.enrollment_status = 'Declined' THEN 1 END) as declined,
-                COUNT(CASE WHEN sr.enrollment_status = 'Incomplete' THEN 1 END) as incomplete
-            FROM students s
-            LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
-            WHERE s.guardian_id = ?
-        ");
-
-        $stmt->bind_param("i", $guardian_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        return $result->fetch_assoc();
-    }
-
     // Get requirements status for a specific student
     public function getStudentRequirements($student_id)
     {
@@ -183,7 +168,6 @@ class Student
         return $result->fetch_assoc();
     }
 
-    // Create new student
     // Create new student
     public function createStudent($data)
     {
@@ -253,18 +237,6 @@ class Student
         return false;
     }
 
-    // Create student requirements record
-    public function createStudentRequirements($student_id)
-    {
-        $stmt = $this->db->prepare("
-        INSERT INTO student_requirements (student_id, enrollment_status, submitted_at) 
-        VALUES (?, 'Pending', NOW())
-    ");
-
-        $stmt->bind_param("i", $student_id);
-        return $stmt->execute();
-    }
-
     // Get student with requirements by ID
     public function getStudentWithRequirements($student_id, $guardian_id)
     {
@@ -289,67 +261,46 @@ class Student
         return $result->fetch_assoc();
     }
 
-    // Update student requirements
-    public function updateRequirements($student_id, $requirements)
+    // Get student count by status for a guardian
+    public function getStudentCountsByStatus($guardian_id)
     {
         $stmt = $this->db->prepare("
-        UPDATE student_requirements 
-        SET 
-            birth_certificate = ?,
-            report_card_form137 = ?,
-            good_moral_certificate = ?,
-            certificate_of_completion = ?,
-            id_picture_2x2 = ?,
-            transfer_credential = ?,
-            medical_certificate = ?,
-            enrollment_status = ?,
-            submitted_at = NOW(),
-            updated_at = NOW()
-        WHERE student_id = ?
-    ");
-
-        $stmt->bind_param(
-            "iiiiiiisi",
-            $requirements['birth_certificate'],
-            $requirements['report_card_form137'],
-            $requirements['good_moral_certificate'],
-            $requirements['certificate_of_completion'],
-            $requirements['id_picture_2x2'],
-            $requirements['transfer_credential'],
-            $requirements['medical_certificate'],
-            $requirements['enrollment_status'],
-            $student_id
-        );
-
-        return $stmt->execute();
-    }
-
-    // Get all students for requirements dropdown
-    public function getStudentsListByGuardian($guardian_id)
-    {
-        $stmt = $this->db->prepare("
-        SELECT 
-            s.student_id,
-            s.lrn,
-            s.first_name,
-            s.last_name,
-            sr.enrollment_status,
-            TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
-        FROM students s
-        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
-        WHERE s.guardian_id = ?
-        ORDER BY s.first_name ASC
-    ");
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN student_status = 'Active' THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN student_status = 'Inactive' THEN 1 ELSE 0 END) as inactive,
+                SUM(CASE WHEN student_status = 'Transferred' THEN 1 ELSE 0 END) as transferred,
+                SUM(CASE WHEN student_status = 'Graduated' THEN 1 ELSE 0 END) as graduated
+            FROM students
+            WHERE guardian_id = ?
+        ");
 
         $stmt->bind_param("i", $guardian_id);
         $stmt->execute();
         $result = $stmt->get_result();
 
-        $students = [];
-        while ($row = $result->fetch_assoc()) {
-            $students[] = $row;
-        }
+        return $result->fetch_assoc();
+    }
 
-        return $students;
+    // Get enrollment status counts for a guardian
+    public function getEnrollmentStatusCounts($guardian_id)
+    {
+        $stmt = $this->db->prepare("
+            SELECT 
+                COUNT(CASE WHEN sr.enrollment_status = 'Pending' THEN 1 END) as pending,
+                COUNT(CASE WHEN sr.enrollment_status = 'For Review' THEN 1 END) as for_review,
+                COUNT(CASE WHEN sr.enrollment_status = 'Approved' THEN 1 END) as approved,
+                COUNT(CASE WHEN sr.enrollment_status = 'Declined' THEN 1 END) as declined,
+                COUNT(CASE WHEN sr.enrollment_status = 'Incomplete' THEN 1 END) as incomplete
+            FROM students s
+            LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+            WHERE s.guardian_id = ?
+        ");
+
+        $stmt->bind_param("i", $guardian_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        return $result->fetch_assoc();
     }
 }
