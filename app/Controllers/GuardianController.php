@@ -271,4 +271,91 @@ class GuardianController extends BaseController
 
         fclose($output);
     }
+
+    public function requirements()
+    {
+        // Check if user is logged in and is a guardian
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
+            header('Location: login');
+            exit;
+        }
+
+        $guardian_id = $_SESSION['user_id'];
+        $studentModel = new Student();
+
+        // Get all students for dropdown
+        $all_students = $studentModel->getStudentsListByGuardian($guardian_id);
+
+        // Get selected student ID
+        $student_id = $_GET['student_id'] ?? null;
+
+        // If no student selected but students exist, select the first one
+        if (!$student_id && !empty($all_students)) {
+            $student_id = $all_students[0]['student_id'];
+        }
+
+        $student = null;
+        $success_message = null;
+        $error_message = null;
+
+        if ($student_id) {
+            // Get student details with requirements
+            $student = $studentModel->getStudentWithRequirements($student_id, $guardian_id);
+
+            // Handle form submission
+            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id']) && $_POST['student_id'] == $student_id) {
+
+                // Collect requirements data
+                $requirements = [
+                    'birth_certificate' => isset($_POST['birth_certificate']) ? 1 : 0,
+                    'report_card_form137' => isset($_POST['report_card_form137']) ? 1 : 0,
+                    'good_moral_certificate' => isset($_POST['good_moral_certificate']) ? 1 : 0,
+                    'certificate_of_completion' => isset($_POST['certificate_of_completion']) ? 1 : 0,
+                    'id_picture_2x2' => isset($_POST['id_picture_2x2']) ? 1 : 0,
+                    'transfer_credential' => isset($_POST['transfer_credential']) ? 1 : 0,
+                    'medical_certificate' => isset($_POST['medical_certificate']) ? 1 : 0
+                ];
+
+                // Check if all required documents are submitted
+                $all_required_submitted = $requirements['birth_certificate'] &&
+                    $requirements['report_card_form137'] &&
+                    $requirements['good_moral_certificate'] &&
+                    $requirements['certificate_of_completion'] &&
+                    $requirements['id_picture_2x2'];
+
+                // Determine enrollment status
+                if ($all_required_submitted) {
+                    $requirements['enrollment_status'] = 'For Review';
+                } else {
+                    $requirements['enrollment_status'] = 'Incomplete';
+                }
+
+                // Update requirements
+                if ($studentModel->updateRequirements($student_id, $requirements)) {
+                    $success_message = "Requirements updated successfully! " .
+                        ($all_required_submitted ? "Your enrollment is now ready for admin review." : "Please complete all required documents.");
+
+                    // Refresh student data
+                    $student = $studentModel->getStudentWithRequirements($student_id, $guardian_id);
+                } else {
+                    $error_message = "Failed to update requirements. Please try again.";
+                }
+            }
+        }
+
+        // Check for success message from add-student
+        if (isset($_SESSION['student_added_success'])) {
+            $success_message = $_SESSION['student_added_success'];
+            unset($_SESSION['student_added_success']);
+        }
+
+        $this->renderGuardian('guardian/requirements', [
+            'pageTitle' => 'Student Requirements - BESEMS',
+            'all_students' => $all_students,
+            'student' => $student,
+            'selected_student_id' => $student_id,
+            'success_message' => $success_message,
+            'error_message' => $error_message
+        ]);
+    }
 }
