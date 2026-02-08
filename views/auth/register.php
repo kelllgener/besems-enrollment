@@ -2,7 +2,7 @@
 <div class="bg-light min-vh-90 d-flex align-items-center justify-content-center">
   <div class="w-100" style="max-width: 480px;">
     <!-- Large screens: scrollable box -->
-    <div class="d-none d-lg-block" style="height:90vh; overflow-y:auto;">
+    <div class="d-none d-lg-block px-4" style="height:90vh; overflow-y:auto;">
       <div class="brand-logo">
           <h2>BESEMS</h2>
           <p>Guardian Registration</p>

@@ -264,4 +264,92 @@ class Student
         $stmt->bind_param("i", $student_id);
         return $stmt->execute();
     }
+
+    // Get student with requirements by ID
+    public function getStudentWithRequirements($student_id, $guardian_id)
+    {
+        $stmt = $this->db->prepare("
+        SELECT 
+            s.*,
+            sr.*,
+            gl.grade_name,
+            sec.section_name,
+            TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
+        FROM students s
+        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+        LEFT JOIN sections sec ON s.assigned_section_id = sec.section_id
+        LEFT JOIN grade_levels gl ON sec.grade_id = gl.grade_id
+        WHERE s.student_id = ? AND s.guardian_id = ?
+    ");
+
+        $stmt->bind_param("ii", $student_id, $guardian_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        return $result->fetch_assoc();
+    }
+
+    // Update student requirements
+    public function updateRequirements($student_id, $requirements)
+    {
+        $stmt = $this->db->prepare("
+        UPDATE student_requirements 
+        SET 
+            birth_certificate = ?,
+            report_card_form137 = ?,
+            good_moral_certificate = ?,
+            certificate_of_completion = ?,
+            id_picture_2x2 = ?,
+            transfer_credential = ?,
+            medical_certificate = ?,
+            enrollment_status = ?,
+            submitted_at = NOW(),
+            updated_at = NOW()
+        WHERE student_id = ?
+    ");
+
+        $stmt->bind_param(
+            "iiiiiiisi",
+            $requirements['birth_certificate'],
+            $requirements['report_card_form137'],
+            $requirements['good_moral_certificate'],
+            $requirements['certificate_of_completion'],
+            $requirements['id_picture_2x2'],
+            $requirements['transfer_credential'],
+            $requirements['medical_certificate'],
+            $requirements['enrollment_status'],
+            $student_id
+        );
+
+        return $stmt->execute();
+    }
+
+    // Get all students for requirements dropdown
+    public function getStudentsListByGuardian($guardian_id)
+    {
+        $stmt = $this->db->prepare("
+        SELECT 
+            s.student_id,
+            s.lrn,
+            s.first_name,
+            s.last_name,
+            sr.enrollment_status,
+            TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
+        FROM students s
+        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+        WHERE s.guardian_id = ?
+        ORDER BY s.first_name ASC
+    ");
+
+        $stmt->bind_param("i", $guardian_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $students = [];
+        while ($row = $result->fetch_assoc()) {
+            $students[] = $row;
+        }
+
+        return $students;
+    }
 }

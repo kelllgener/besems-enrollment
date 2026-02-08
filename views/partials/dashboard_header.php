@@ -23,7 +23,7 @@
                     <i class="bi bi-list"></i>
                 </button>
 
-                <span class="navbar-brand mb-0 h1"><?= $pageTitle ?? 'Dashboard' ?></span>
+                <span class="navbar-brand mb-0 h1">Dashboard</span>
 
                 <div class="ms-auto d-flex align-items-center">
                     <span class="navbar-text me-3">
