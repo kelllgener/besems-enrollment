@@ -2,13 +2,11 @@
 
 namespace App\Controllers;
 
-use App\Models\Announcement;
 use App\Models\Dashboard;
-use App\Models\Student;
 
-class DashboardController extends BaseController
+class AdminController extends BaseController
 {
-    public function adminDashboard()
+    public function dashboard()
     {
         // Check if user is logged in
         if (!isset($_SESSION['user_id'])) {
@@ -17,16 +15,16 @@ class DashboardController extends BaseController
         }
 
         $name = $_SESSION['name'] ?? 'User';
-        
+
         // Get dashboard data
         $dashboardModel = new Dashboard();
-        
+
         try {
             $stats = $dashboardModel->getAllStats();
             $students_per_grade = $dashboardModel->getStudentsPerGrade();
             $enrollment_status = $dashboardModel->getEnrollmentStatus();
             $recent_students = $dashboardModel->getRecentStudents(5);
-            
+
             // Render the dashboard view
             $this->render('dashboard', [
                 'pageTitle' => 'BESEMS - Dashboard',
@@ -39,7 +37,7 @@ class DashboardController extends BaseController
         } catch (\Exception $e) {
             // Handle errors gracefully
             error_log("Dashboard error: " . $e->getMessage());
-            
+
             $this->render('admin/dashboard', [
                 'pageTitle' => 'BESEMS - Dashboard',
                 'name' => $name,
@@ -54,36 +52,5 @@ class DashboardController extends BaseController
                 'recent_students' => []
             ]);
         }
-    }
-
-    public function guardianDashboard()
-    {
-        // Check if user is logged in and is a guardian
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
-            header('Location: login');
-            exit;
-        }
-
-        $guardian_id = $_SESSION['user_id'];
-        $name = $_SESSION['name'] ?? 'Guardian';
-
-        // Get student data
-        $studentModel = new Student();
-        $students = $studentModel->getStudentsByGuardian($guardian_id);
-        $student_counts = $studentModel->getStudentCountsByStatus($guardian_id);
-        $enrollment_counts = $studentModel->getEnrollmentStatusCounts($guardian_id);
-
-        // Get announcements
-        $announcementModel = new Announcement();
-        $announcements = $announcementModel->getPublishedAnnouncements(5);
-
-        $this->render('dashboard', [
-            'pageTitle' => 'Guardian Dashboard - BESEMS',
-            'name' => $name,
-            'students' => $students,
-            'student_counts' => $student_counts,
-            'enrollment_counts' => $enrollment_counts,
-            'announcements' => $announcements
-        ]);
     }
 }

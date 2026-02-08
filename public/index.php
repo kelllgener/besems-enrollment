@@ -26,7 +26,9 @@ switch ($page) {
     // Dashboard route
     case 'dashboard':
         $dashboardController = new DashboardController();
-        $_SESSION['role'] === 'admin' ? $dashboardController->adminDashboard() : $dashboardController->guardianDashboard();
+        $_SESSION['role'] === 'admin' ?
+             $dashboardController->adminDashboard() : 
+             $dashboardController->guardianDashboard();
         break;
 
 
@@ -40,12 +42,12 @@ switch ($page) {
     case 'requirements':
         (new GuardianController())->requirements();
         break;
-    case 'announcements':
-        (new GuardianController())->announcements();
-        break;
-    case 'settings':
-        (new GuardianController())->settings();
-        break;
+    // case 'announcements':
+    //     (new GuardianController())->announcements();
+    //     break;
+    // case 'settings':
+    //     (new GuardianController())->settings();
+    //     break;
 
     default:
         http_response_code(404);
