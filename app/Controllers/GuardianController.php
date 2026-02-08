@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\Student;
 use App\Models\Announcement;
 use App\Models\Requirement;
+use App\Models\User;
 
 class GuardianController extends BaseController
 {
@@ -358,6 +359,112 @@ class GuardianController extends BaseController
             'all_students' => $all_students,
             'student' => $student,
             'selected_student_id' => $student_id,
+            'success_message' => $success_message,
+            'error_message' => $error_message
+        ]);
+    }
+
+    //settings
+    public function settings()
+    {
+        // Check if user is logged in and is a guardian
+        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
+            header('Location: login');
+            exit;
+        }
+
+        $guardian_id = $_SESSION['user_id'];
+        $userModel = new User();
+
+        // Get current user data
+        $user = $userModel->findById($guardian_id);
+
+        $success_message = null;
+        $error_message = null;
+
+        // Handle form submission
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $action = $_POST['action'] ?? '';
+
+            if ($action === 'update_profile') {
+                $errors = [];
+
+                // Validate email
+                if (empty($_POST['email']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+                    $errors[] = "Valid email address is required";
+                }
+
+                // Validate contact number
+                if (empty($_POST['contact_number']) || !preg_match('/^09[0-9]{9}$/', $_POST['contact_number'])) {
+                    $errors[] = "Valid contact number is required (09XXXXXXXXX)";
+                }
+
+                // Check if email is already used by another user
+                if (!empty($_POST['email']) && $_POST['email'] !== $user['email']) {
+                    $existing_user = $userModel->findByEmail($_POST['email']);
+                    if ($existing_user && $existing_user['user_id'] != $guardian_id) {
+                        $errors[] = "Email is already used by another account";
+                    }
+                }
+
+                if (empty($errors)) {
+                    $data = [
+                        'email' => trim($_POST['email']),
+                        'contact_number' => trim($_POST['contact_number'])
+                    ];
+
+                    if ($userModel->updateProfile($guardian_id, $data)) {
+                        $success_message = "Profile updated successfully!";
+                        $_SESSION['email'] = $data['email'];
+                        // Refresh user data
+                        $user = $userModel->findById($guardian_id);
+                    } else {
+                        $error_message = "Failed to update profile. Please try again.";
+                    }
+                } else {
+                    $error_message = implode('<br>', $errors);
+                }
+            }
+
+            if ($action === 'change_password') {
+                $errors = [];
+
+                // Validate current password
+                if (empty($_POST['current_password'])) {
+                    $errors[] = "Current password is required";
+                } elseif (!password_verify($_POST['current_password'], $user['password'])) {
+                    $errors[] = "Current password is incorrect";
+                }
+
+                // Validate new password
+                if (empty($_POST['new_password'])) {
+                    $errors[] = "New password is required";
+                } elseif (strlen($_POST['new_password']) < 6) {
+                    $errors[] = "New password must be at least 6 characters";
+                }
+
+                // Validate password confirmation
+                if (empty($_POST['confirm_password'])) {
+                    $errors[] = "Please confirm your new password";
+                } elseif ($_POST['new_password'] !== $_POST['confirm_password']) {
+                    $errors[] = "New passwords do not match";
+                }
+
+                if (empty($errors)) {
+                    if ($userModel->updatePassword($guardian_id, $_POST['new_password'])) {
+                        $success_message = "Password changed successfully!";
+                    } else {
+                        $error_message = "Failed to change password. Please try again.";
+                    }
+                } else {
+                    $error_message = implode('<br>', $errors);
+                }
+            }
+        }
+
+        $this->render('settings', [
+            'pageTitle' => 'Settings - BESEMS',
+            'user' => $user,
             'success_message' => $success_message,
             'error_message' => $error_message
         ]);

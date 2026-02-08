@@ -46,9 +46,9 @@ switch ($page) {
     // case 'announcements':
     //     (new GuardianController())->announcements();
     //     break;
-    // case 'settings':
-    //     (new GuardianController())->settings();
-    //     break;
+    case 'settings':
+        (new GuardianController())->settings();
+        break;
 
 
     // Admin routes
