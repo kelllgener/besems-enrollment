@@ -7,11 +7,15 @@ class BaseController
     /**
      * Renders an admin page with admin header/footer
      */
-    protected function renderAdmin($view, $data = [])
+    protected function render($view, $data = [])
     {
         extract($data);
+        $viewPath =  $_SESSION['role'] === 'admin' ?
+            __DIR__ . "/../../views/admin/{$view}.php" :
+            __DIR__ . "/../../views/guardian/{$view}.php";
+
+
         $header = __DIR__ . '/../../views/partials/dashboard_header.php';
-        $viewPath =  __DIR__ . "/../../views/admin/{$view}.php";
         $footer = __DIR__ . '/../../views/partials/dashboard_footer.php';
 
         if (file_exists($viewPath)) {
