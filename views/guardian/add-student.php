@@ -8,7 +8,7 @@
                 </h3>
                 <p class="text-muted mb-0">Complete the form below to enroll your child</p>
             </div>
-            <a href="dashboard" class="btn btn-outline-secondary">
+            <a href="dashboard" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
                 <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
             </a>
         </div>
@@ -391,10 +391,10 @@
 
             <!-- Action Buttons -->
             <div class="d-flex gap-2 justify-content-end mb-4">
-                <a href="guardian-dashboard" class="btn btn-outline-secondary btn-lg">
+                <a href="guardian-dashboard" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
                     <i class="bi bi-x-circle me-2"></i>Cancel
                 </a>
-                <button type="submit" class="btn btn-primary btn-lg">
+                <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
                     <i class="bi bi-check-circle me-2"></i>Save and Continue
                 </button>
             </div>

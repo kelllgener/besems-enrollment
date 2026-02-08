@@ -8,7 +8,7 @@
                 </h3>
                 <p class="text-muted mb-0">Upload and manage enrollment documents</p>
             </div>
-            <a href="guardian-dashboard" class="btn btn-outline-secondary">
+            <a href="guardian-dashboard" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
                 <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
             </a>
         </div>
@@ -35,7 +35,7 @@
                     <i class="bi bi-person-plus" style="font-size: 4rem; opacity: 0.3;"></i>
                     <h5 class="mt-3 text-muted">No students enrolled yet</h5>
                     <p class="text-muted mb-3">Please add a student first before uploading requirements</p>
-                    <a href="add-student" class="btn btn-primary">
+                    <a href="add-student" class="btn btn-primary rounded-pill px-4 shadow-sm">
                         <i class="bi bi-plus-circle me-2"></i>Add Student
                     </a>
                 </div>
@@ -48,7 +48,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-8">
                             <label class="form-label fw-semibold mb-2">Select Student</label>
-                            <select class="form-select form-select-lg" onchange="window.location.href='requirements?student_id=' + this.value">
+                            <select class="form-select" onchange="window.location.href='requirements?student_id=' + this.value">
                                 <?php foreach ($all_students as $s): ?>
                                     <option value="<?= $s['student_id'] ?>" <?= $s['student_id'] == $selected_student_id ? 'selected' : '' ?>>
                                         <?= htmlspecialchars($s['first_name'] . ' ' . $s['last_name']) ?> 
@@ -59,7 +59,7 @@
                             </select>
                         </div>
                         <div class="col-md-4 text-end">
-                            <a href="add-student" class="btn btn-outline-primary mt-4">
+                            <a href="add-student" class="btn btn-outline-primary mt-4 rounded-pill px-4 shadow-sm">
                                 <i class="bi bi-plus-circle me-1"></i>Add New Student
                             </a>
                         </div>
@@ -292,10 +292,10 @@
 
                     <!-- Action Buttons -->
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
-                        <a href="my-students" class="btn btn-outline-secondary btn-lg">
-                            <i class="bi bi-arrow-left me-2"></i>Back to My Children
+                        <a href="my-students" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+                            <i class="bi bi-arrow-left me-1"></i>Back to My Children
                         </a>
-                        <button type="submit" class="btn btn-success btn-lg">
+                        <button type="submit" class="btn btn-success rounded-pill px-4 shadow-sm">
                             <i class="bi bi-check-circle me-2"></i>Save Requirements
                         </button>
                     </div>
