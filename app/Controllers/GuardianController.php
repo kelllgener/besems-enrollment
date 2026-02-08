@@ -8,7 +8,6 @@ use App\Models\Requirement;
 
 class GuardianController extends BaseController
 {
-
     //Guardian dashboard
     public function dashboard()
     {
@@ -80,7 +79,7 @@ class GuardianController extends BaseController
             exit;
         }
 
-        $this->renderGuardian('my-students', [
+        $this->render('my-students', [
             'pageTitle' => 'My Children - BESEMS',
             'students' => $students,
             'search' => $search,
@@ -206,13 +205,13 @@ class GuardianController extends BaseController
             }
 
             // If there are errors, show the form again with errors
-            $this->renderGuardian('add-student', [
+            $this->render('add-student', [
                 'pageTitle' => 'Add Student - BESEMS',
                 'errors' => $errors,
                 'old' => $_POST,
             ]);
         } else {
-            $this->renderGuardian('add-student', [
+            $this->render('add-student', [
                 'pageTitle' => 'Add Student - BESEMS'
             ]);
         }
@@ -354,7 +353,7 @@ class GuardianController extends BaseController
             unset($_SESSION['student_added_success']);
         }
 
-        $this->renderGuardian('requirements', [
+        $this->render('requirements', [
             'pageTitle' => 'Student Requirements - BESEMS',
             'all_students' => $all_students,
             'student' => $student,

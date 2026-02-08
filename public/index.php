@@ -25,10 +25,11 @@ switch ($page) {
 
     // Dashboard route
     case 'dashboard':
-        $dashboardController = new DashboardController();
+        $adminController = new AdminController();
+        $guardianController = new GuardianController();
         $_SESSION['role'] === 'admin' ?
-             $dashboardController->adminDashboard() : 
-             $dashboardController->guardianDashboard();
+            $adminController->dashboard() :
+            $guardianController->dashboard();
         break;
 
 
@@ -49,12 +50,14 @@ switch ($page) {
     //     (new GuardianController())->settings();
     //     break;
 
+
+    // Admin routes
+
+
+
+    // fallback
     default:
         http_response_code(404);
         echo "404 - Page not found";
         break;
-
-
-    // Admin routes
-
 }
