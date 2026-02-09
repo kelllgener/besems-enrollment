@@ -19,7 +19,7 @@ class GuardianController extends BaseController
         $studentModel = new Student();
         $announcementModel = new Announcement();
         
-        $this->render('guardian/dashboard', [
+        $this->render('dashboard', [
             'pageTitle' => 'Guardian Dashboard - BESEMS',
             'name' => $name,
             'students' => $studentModel->getStudentsByGuardian($guardian_id),
@@ -62,7 +62,7 @@ class GuardianController extends BaseController
             exit;
         }
 
-        $this->render('guardian/my-students', [
+        $this->render('my-students', [
             'pageTitle' => 'My Children - BESEMS',
             'students' => $result['students'],
             'search' => $search,
@@ -84,7 +84,7 @@ class GuardianController extends BaseController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->handleAddStudentSubmission();
         } else {
-            $this->render('guardian/add-student', [
+            $this->render('add-student', [
                 'pageTitle' => 'Add Student - BESEMS'
             ]);
         }
@@ -128,7 +128,7 @@ class GuardianController extends BaseController
         }
 
         if (!empty($errors)) {
-            $this->render('guardian/add-student', [
+            $this->render('add-student', [
                 'pageTitle' => 'Add Student - BESEMS',
                 'errors' => $errors,
                 'old' => $_POST
@@ -149,7 +149,7 @@ class GuardianController extends BaseController
                 "Student added successfully! Please upload the required documents."
             );
         } else {
-            $this->render('guardian/add-student', [
+            $this->render('add-student', [
                 'pageTitle' => 'Add Student - BESEMS',
                 'errors' => ["Failed to add student. Please try again."],
                 'old' => $_POST
@@ -212,7 +212,7 @@ class GuardianController extends BaseController
 
         $student = $student_id ? $studentModel->getStudentWithRequirements($student_id, $guardian_id) : null;
 
-        $this->render('guardian/requirements', [
+        $this->render('requirements', [
             'pageTitle' => 'Student Requirements - BESEMS',
             'all_students' => $all_students,
             'student' => $student,
@@ -274,7 +274,7 @@ class GuardianController extends BaseController
             $this->handleSettingsSubmission($userModel, $user);
         }
 
-        $this->render('guardian/settings', [
+        $this->render('settings', [
             'pageTitle' => 'Settings - BESEMS',
             'user' => $user,
             'success_message' => $this->getSuccessMessage(),
@@ -372,7 +372,7 @@ class GuardianController extends BaseController
 
         $result = $announcementModel->getAnnouncementsWithFilters($type_filter, $search, $per_page, $offset);
 
-        $this->render('guardian/announcements', [
+        $this->render('announcements', [
             'pageTitle' => 'Announcements - BESEMS',
             'announcements' => $result['announcements'],
             'type_filter' => $type_filter,
@@ -402,8 +402,8 @@ class GuardianController extends BaseController
             $this->redirectWithError('announcements', "Announcement not found");
         }
 
-        $this->render('guardian/view-announcement', [
-            'pageTitle' => 'View Announcement - BESEMS',
+        $this->render('announcement', [
+            'pageTitle' => 'Announcement - BESEMS',
             'announcement' => $announcement
         ]);
     }
