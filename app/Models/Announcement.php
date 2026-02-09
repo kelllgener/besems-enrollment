@@ -17,6 +17,16 @@ class Announcement
     // Get published announcements for guardians with filters and pagination
     public function getAnnouncementsWithFilters($type_filter = '', $search = '', $limit = 10, $offset = 0)
     {
+        // Ensure limit and offset are non-negative integers
+        $limit = (int)$limit;
+        $offset = (int)$offset;
+        if ($limit < 1) {
+            $limit = 10;
+        }
+        if ($offset < 0) {
+            $offset = 0;
+        }
+
         $sql = "
             SELECT 
                 a.*,
@@ -29,7 +39,7 @@ class Announcement
             AND (a.target_audience = 'All' OR a.target_audience = 'Guardians')
             AND (a.expiry_date IS NULL OR a.expiry_date >= CURDATE())
         ";
-        
+
         $count_sql = "
             SELECT COUNT(*) as total
             FROM announcements a
@@ -37,38 +47,38 @@ class Announcement
             AND (a.target_audience = 'All' OR a.target_audience = 'Guardians')
             AND (a.expiry_date IS NULL OR a.expiry_date >= CURDATE())
         ";
-        
+
         // Add type filter
         if (!empty($type_filter)) {
             $type_filter = $this->db->real_escape_string($type_filter);
             $sql .= " AND a.announcement_type = '{$type_filter}'";
             $count_sql .= " AND a.announcement_type = '{$type_filter}'";
         }
-        
+
         // Add search filter
         if (!empty($search)) {
             $search = $this->db->real_escape_string($search);
             $sql .= " AND (a.title LIKE '%{$search}%' OR a.content LIKE '%{$search}%')";
             $count_sql .= " AND (a.title LIKE '%{$search}%' OR a.content LIKE '%{$search}%')";
         }
-        
+
         // Get total count
         $count_result = $this->db->query($count_sql);
         $total = $count_result->fetch_assoc()['total'];
-        
+
         // Add ordering and pagination
         $sql .= " ORDER BY a.created_at DESC LIMIT {$limit} OFFSET {$offset}";
-        
+
         // Execute query
         $result = $this->db->query($sql);
-        
+
         $announcements = [];
         if ($result) {
             while ($row = $result->fetch_assoc()) {
                 $announcements[] = $row;
             }
         }
-        
+
         return [
             'announcements' => $announcements,
             'total' => $total
@@ -90,16 +100,16 @@ class Announcement
             ORDER BY a.created_at DESC
             LIMIT ?
         ");
-        
+
         $stmt->bind_param("i", $limit);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         $announcements = [];
         while ($row = $result->fetch_assoc()) {
             $announcements[] = $row;
         }
-        
+
         return $announcements;
     }
 
@@ -117,11 +127,11 @@ class Announcement
             WHERE a.announcement_id = ?
             AND a.is_published = 1
         ");
-        
+
         $stmt->bind_param("i", $announcement_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         return $result->fetch_assoc();
     }
 
@@ -138,12 +148,12 @@ class Announcement
             AND (expiry_date IS NULL OR expiry_date >= CURDATE())
             GROUP BY announcement_type
         ");
-        
+
         $counts = [];
         while ($row = $result->fetch_assoc()) {
             $counts[$row['announcement_type']] = $row['count'];
         }
-        
+
         return $counts;
     }
 }

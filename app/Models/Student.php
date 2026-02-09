@@ -50,6 +50,16 @@ class Student
     // Get students with filters and pagination
     public function getStudentsWithFilters($guardian_id, $search = '', $status_filter = '', $enrollment_filter = '', $limit = 10, $offset = 0)
     {
+        // Ensure limit and offset are non-negative integers
+        $limit = (int)$limit;
+        $offset = (int)$offset;
+        if ($limit < 1) {
+            $limit = 10;
+        }
+        if ($offset < 0) {
+            $offset = 0;
+        }
+
         $sql = "
             SELECT 
                 s.*,
