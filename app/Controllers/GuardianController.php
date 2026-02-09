@@ -9,47 +9,33 @@ use App\Models\User;
 
 class GuardianController extends BaseController
 {
-    //Guardian dashboard
     public function dashboard()
     {
-        // Check if user is logged in and is a guardian
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
-            header('Location: login');
-            exit;
-        }
-
-        $guardian_id = $_SESSION['user_id'];
+        $this->requireGuardian();
+        
+        $guardian_id = $this->getCurrentUserId();
         $name = $_SESSION['name'] ?? 'Guardian';
-
-        // Get student data
+        
         $studentModel = new Student();
-        $students = $studentModel->getStudentsByGuardian($guardian_id);
-        $student_counts = $studentModel->getStudentCountsByStatus($guardian_id);
-        $enrollment_counts = $studentModel->getEnrollmentStatusCounts($guardian_id);
-
-        // Get announcements
         $announcementModel = new Announcement();
-        $announcements = $announcementModel->getPublishedAnnouncements(5);
-
-        $this->render('dashboard', [
+        
+        $this->render('guardian/dashboard', [
             'pageTitle' => 'Guardian Dashboard - BESEMS',
             'name' => $name,
-            'students' => $students,
-            'student_counts' => $student_counts,
-            'enrollment_counts' => $enrollment_counts,
-            'announcements' => $announcements
+            'students' => $studentModel->getStudentsByGuardian($guardian_id),
+            'student_counts' => $studentModel->getStudentCountsByStatus($guardian_id),
+            'enrollment_counts' => $studentModel->getEnrollmentStatusCounts($guardian_id),
+            'announcements' => $announcementModel->getPublishedAnnouncements(5)
         ]);
     }
 
+    // ==================== MY STUDENTS ====================
+    
     public function myStudents()
     {
-        // Check if user is logged in and is a guardian
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
-            header('Location: login');
-            exit;
-        }
-
-        $guardian_id = $_SESSION['user_id'];
+        $this->requireGuardian();
+        
+        $guardian_id = $this->getCurrentUserId();
         $studentModel = new Student();
 
         // Get filter parameters
@@ -60,202 +46,383 @@ class GuardianController extends BaseController
         $per_page = 10;
         $offset = ($page - 1) * $per_page;
 
-        // Get filtered students with pagination
+        // Get filtered students
         $result = $studentModel->getStudentsWithFilters(
-            $guardian_id,
-            $search,
-            $status_filter,
+            $guardian_id, 
+            $search, 
+            $status_filter, 
             $enrollment_filter,
             $per_page,
             $offset
         );
 
-        $students = $result['students'];
-        $total_records = $result['total'];
-        $total_pages = ceil($total_records / $per_page);
-
         // Handle CSV export
         if (isset($_GET['export']) && $_GET['export'] === 'csv') {
-            $this->exportStudentsToCSV($students);
+            $this->exportStudentsToCSV($result['students']);
             exit;
         }
 
-        $this->render('my-students', [
+        $this->render('guardian/my-students', [
             'pageTitle' => 'My Children - BESEMS',
-            'students' => $students,
+            'students' => $result['students'],
             'search' => $search,
             'status_filter' => $status_filter,
             'enrollment_filter' => $enrollment_filter,
             'current_page' => $page,
-            'total_pages' => $total_pages,
-            'total_records' => $total_records,
+            'total_pages' => ceil($result['total'] / $per_page),
+            'total_records' => $result['total'],
             'per_page' => $per_page
         ]);
     }
 
+    // ==================== ADD STUDENT ====================
+    
     public function addStudent()
     {
-        // Check if user is logged in and is a guardian
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
-            header('Location: login');
-            exit;
-        }
-
-        $requirementModel = new Requirement();
+        $this->requireGuardian();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $errors = [];
-            $studentModel = new Student();
-
-            // Validate required fields
-            $required_fields = [
-                'lrn',
-                'first_name',
-                'last_name',
-                'date_of_birth',
-                'gender',
-                'barangay',
-                'city_municipality',
-                'province',
-                'guardian_relationship'
-            ];
-
-            foreach ($required_fields as $field) {
-                if (empty($_POST[$field])) {
-                    $errors[] = ucfirst(str_replace('_', ' ', $field)) . " is required";
-                }
-            }
-
-            // Validate LRN (12 digits)
-            if (!empty($_POST['lrn'])) {
-                if (!preg_match('/^[0-9]{12}$/', $_POST['lrn'])) {
-                    $errors[] = "LRN must be exactly 12 digits";
-                }
-                // Check if LRN already exists
-                if ($studentModel->findByLRN($_POST['lrn'])) {
-                    $errors[] = "LRN already exists in the system";
-                }
-            }
-
-            // Validate date of birth
-            if (!empty($_POST['date_of_birth'])) {
-                $dob = new \DateTime($_POST['date_of_birth']);
-                $today = new \DateTime('today');
-                $age = $dob->diff($today)->y;
-
-                if ($age < 5 || $age > 15) {
-                    $errors[] = "Student age must be between 5 and 15 years old for elementary enrollment";
-                }
-            }
-
-            // Validate contact numbers (if provided)
-            if (!empty($_POST['father_contact']) && !preg_match('/^09[0-9]{9}$/', $_POST['father_contact'])) {
-                $errors[] = "Father's contact number must be in format: 09XXXXXXXXX";
-            }
-            if (!empty($_POST['mother_contact']) && !preg_match('/^09[0-9]{9}$/', $_POST['mother_contact'])) {
-                $errors[] = "Mother's contact number must be in format: 09XXXXXXXXX";
-            }
-
-            // If no errors, create the student
-            if (empty($errors)) {
-                $data = [
-                    'guardian_id' => $_SESSION['user_id'],
-                    'lrn' => trim($_POST['lrn']),
-                    'first_name' => trim($_POST['first_name']),
-                    'middle_name' => !empty($_POST['middle_name']) ? trim($_POST['middle_name']) : null,
-                    'last_name' => trim($_POST['last_name']),
-                    'name_extension' => !empty($_POST['name_extension']) ? trim($_POST['name_extension']) : null,
-                    'date_of_birth' => $_POST['date_of_birth'],
-                    'place_of_birth' => !empty($_POST['place_of_birth']) ? trim($_POST['place_of_birth']) : null,
-                    'gender' => $_POST['gender'],
-                    'mother_tongue' => !empty($_POST['mother_tongue']) ? trim($_POST['mother_tongue']) : null,
-                    'religion' => !empty($_POST['religion']) ? trim($_POST['religion']) : null,
-                    'indigenous_people' => !empty($_POST['indigenous_people']) ? trim($_POST['indigenous_people']) : null,
-                    'house_number' => !empty($_POST['house_number']) ? trim($_POST['house_number']) : null,
-                    'street_name' => !empty($_POST['street_name']) ? trim($_POST['street_name']) : null,
-                    'barangay' => trim($_POST['barangay']),
-                    'city_municipality' => trim($_POST['city_municipality']),
-                    'province' => trim($_POST['province']),
-                    'region' => !empty($_POST['region']) ? trim($_POST['region']) : null,
-                    'zip_code' => !empty($_POST['zip_code']) ? trim($_POST['zip_code']) : null,
-                    'father_name' => !empty($_POST['father_name']) ? trim($_POST['father_name']) : null,
-                    'father_occupation' => !empty($_POST['father_occupation']) ? trim($_POST['father_occupation']) : null,
-                    'father_contact' => !empty($_POST['father_contact']) ? trim($_POST['father_contact']) : null,
-                    'mother_name' => !empty($_POST['mother_name']) ? trim($_POST['mother_name']) : null,
-                    'mother_occupation' => !empty($_POST['mother_occupation']) ? trim($_POST['mother_occupation']) : null,
-                    'mother_contact' => !empty($_POST['mother_contact']) ? trim($_POST['mother_contact']) : null,
-                    'guardian_name' => !empty($_POST['guardian_name']) ? trim($_POST['guardian_name']) : null,
-                    'guardian_relationship' => $_POST['guardian_relationship'],
-                    'guardian_occupation' => !empty($_POST['guardian_occupation']) ? trim($_POST['guardian_occupation']) : null,
-                    'enrollment_type' => $_POST['enrollment_type'] ?? 'New',
-                    'previous_school' => !empty($_POST['previous_school']) ? trim($_POST['previous_school']) : null,
-                    'previous_grade_level' => !empty($_POST['previous_grade_level']) ? trim($_POST['previous_grade_level']) : null
-                ];
-
-                $student_id = $studentModel->createStudent($data);
-
-                if ($student_id) {
-                    $requirementModel->createStudentRequirements($student_id);
-
-                    $_SESSION['student_added_success'] = "Student added successfully! Please upload the required documents.";
-                    header("Location: requirements?student_id=" . $student_id);
-                    exit();
-                } else {
-                    $errors[] = "Failed to add student. Please try again.";
-                }
-            }
-
-            // If there are errors, show the form again with errors
-            $this->render('add-student', [
-                'pageTitle' => 'Add Student - BESEMS',
-                'errors' => $errors,
-                'old' => $_POST,
-            ]);
+            $this->handleAddStudentSubmission();
         } else {
-            $this->render('add-student', [
+            $this->render('guardian/add-student', [
                 'pageTitle' => 'Add Student - BESEMS'
             ]);
         }
     }
 
+    private function handleAddStudentSubmission()
+    {
+        $studentModel = new Student();
+        $requirementModel = new Requirement();
+        $errors = [];
 
+        // Validate required fields
+        $required = ['lrn', 'first_name', 'last_name', 'date_of_birth', 'gender', 'barangay', 'city_municipality', 'province', 'guardian_relationship'];
+        $errors = array_merge($errors, $this->validateRequired($_POST, $required));
+
+        // Validate LRN
+        if (!empty($_POST['lrn'])) {
+            if (!preg_match('/^[0-9]{12}$/', $_POST['lrn'])) {
+                $errors[] = "LRN must be exactly 12 digits";
+            } elseif ($studentModel->findByLRN($_POST['lrn'])) {
+                $errors[] = "LRN already exists in the system";
+            }
+        }
+
+        // Validate age
+        if (!empty($_POST['date_of_birth'])) {
+            $age = (new \DateTime($_POST['date_of_birth']))->diff(new \DateTime('today'))->y;
+            if ($age < 5 || $age > 15) {
+                $errors[] = "Student age must be between 5 and 15 years old";
+            }
+        }
+
+        // Validate contact numbers if provided
+        if (!empty($_POST['father_contact'])) {
+            $error = $this->validateContactNumber($_POST['father_contact']);
+            if ($error) $errors[] = "Father's {$error}";
+        }
+        if (!empty($_POST['mother_contact'])) {
+            $error = $this->validateContactNumber($_POST['mother_contact']);
+            if ($error) $errors[] = "Mother's {$error}";
+        }
+
+        if (!empty($errors)) {
+            $this->render('guardian/add-student', [
+                'pageTitle' => 'Add Student - BESEMS',
+                'errors' => $errors,
+                'old' => $_POST
+            ]);
+            return;
+        }
+
+        // Prepare data
+        $data = $this->prepareStudentData($_POST);
+        
+        // Create student
+        $student_id = $studentModel->createStudent($data);
+
+        if ($student_id) {
+            $requirementModel->createStudentRequirements($student_id);
+            $this->redirectWithSuccess(
+                "requirements?student_id={$student_id}",
+                "Student added successfully! Please upload the required documents."
+            );
+        } else {
+            $this->render('guardian/add-student', [
+                'pageTitle' => 'Add Student - BESEMS',
+                'errors' => ["Failed to add student. Please try again."],
+                'old' => $_POST
+            ]);
+        }
+    }
+
+    private function prepareStudentData($post)
+    {
+        return [
+            'guardian_id' => $this->getCurrentUserId(),
+            'lrn' => trim($post['lrn']),
+            'first_name' => trim($post['first_name']),
+            'middle_name' => !empty($post['middle_name']) ? trim($post['middle_name']) : null,
+            'last_name' => trim($post['last_name']),
+            'name_extension' => !empty($post['name_extension']) ? trim($post['name_extension']) : null,
+            'date_of_birth' => $post['date_of_birth'],
+            'place_of_birth' => !empty($post['place_of_birth']) ? trim($post['place_of_birth']) : null,
+            'gender' => $post['gender'],
+            'mother_tongue' => !empty($post['mother_tongue']) ? trim($post['mother_tongue']) : null,
+            'religion' => !empty($post['religion']) ? trim($post['religion']) : null,
+            'indigenous_people' => !empty($post['indigenous_people']) ? trim($post['indigenous_people']) : null,
+            'house_number' => !empty($post['house_number']) ? trim($post['house_number']) : null,
+            'street_name' => !empty($post['street_name']) ? trim($post['street_name']) : null,
+            'barangay' => trim($post['barangay']),
+            'city_municipality' => trim($post['city_municipality']),
+            'province' => trim($post['province']),
+            'region' => !empty($post['region']) ? trim($post['region']) : null,
+            'zip_code' => !empty($post['zip_code']) ? trim($post['zip_code']) : null,
+            'father_name' => !empty($post['father_name']) ? trim($post['father_name']) : null,
+            'father_occupation' => !empty($post['father_occupation']) ? trim($post['father_occupation']) : null,
+            'father_contact' => !empty($post['father_contact']) ? trim($post['father_contact']) : null,
+            'mother_name' => !empty($post['mother_name']) ? trim($post['mother_name']) : null,
+            'mother_occupation' => !empty($post['mother_occupation']) ? trim($post['mother_occupation']) : null,
+            'mother_contact' => !empty($post['mother_contact']) ? trim($post['mother_contact']) : null,
+            'guardian_name' => !empty($post['guardian_name']) ? trim($post['guardian_name']) : null,
+            'guardian_relationship' => $post['guardian_relationship'],
+            'guardian_occupation' => !empty($post['guardian_occupation']) ? trim($post['guardian_occupation']) : null,
+            'enrollment_type' => $post['enrollment_type'] ?? 'New',
+            'previous_school' => !empty($post['previous_school']) ? trim($post['previous_school']) : null,
+            'previous_grade_level' => !empty($post['previous_grade_level']) ? trim($post['previous_grade_level']) : null
+        ];
+    }
+
+    // ==================== REQUIREMENTS ====================
+    
+    public function requirements()
+    {
+        $this->requireGuardian();
+        
+        $guardian_id = $this->getCurrentUserId();
+        $studentModel = new Student();
+
+        $all_students = $studentModel->getStudentsListByGuardian($guardian_id);
+        $student_id = $_GET['student_id'] ?? ($all_students[0]['student_id'] ?? null);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id'])) {
+            $this->handleRequirementsSubmission($student_id);
+        }
+
+        $student = $student_id ? $studentModel->getStudentWithRequirements($student_id, $guardian_id) : null;
+
+        $this->render('guardian/requirements', [
+            'pageTitle' => 'Student Requirements - BESEMS',
+            'all_students' => $all_students,
+            'student' => $student,
+            'selected_student_id' => $student_id,
+            'success_message' => $this->getSuccessMessage(),
+            'error_message' => $this->getErrorMessage()
+        ]);
+    }
+
+    private function handleRequirementsSubmission($student_id)
+    {
+        $studentModel = new Student();
+        $requirementModel = new Requirement();
+        
+        // Verify authorization
+        if (!$studentModel->belongsToGuardian($student_id, $this->getCurrentUserId())) {
+            $this->redirectWithError('requirements', 'Unauthorized access');
+        }
+
+        $requirements = [
+            'birth_certificate' => isset($_POST['birth_certificate']) ? 1 : 0,
+            'report_card_form137' => isset($_POST['report_card_form137']) ? 1 : 0,
+            'good_moral_certificate' => isset($_POST['good_moral_certificate']) ? 1 : 0,
+            'certificate_of_completion' => isset($_POST['certificate_of_completion']) ? 1 : 0,
+            'id_picture_2x2' => isset($_POST['id_picture_2x2']) ? 1 : 0,
+            'transfer_credential' => isset($_POST['transfer_credential']) ? 1 : 0,
+            'medical_certificate' => isset($_POST['medical_certificate']) ? 1 : 0
+        ];
+
+        $all_required = $requirements['birth_certificate'] && 
+                       $requirements['report_card_form137'] && 
+                       $requirements['good_moral_certificate'] && 
+                       $requirements['certificate_of_completion'] && 
+                       $requirements['id_picture_2x2'];
+
+        $requirements['enrollment_status'] = $all_required ? 'For Review' : 'Incomplete';
+
+        if ($requirementModel->updateRequirements($student_id, $requirements)) {
+            $message = $all_required 
+                ? "Requirements updated successfully! Your enrollment is now ready for admin review."
+                : "Requirements updated. Please complete all required documents.";
+            $this->setSuccessMessage($message);
+        } else {
+            $this->setErrorMessage("Failed to update requirements. Please try again.");
+        }
+    }
+
+    // ==================== SETTINGS ====================
+    
+    public function settings()
+    {
+        $this->requireGuardian();
+        
+        $guardian_id = $this->getCurrentUserId();
+        $userModel = new User();
+        $user = $userModel->findById($guardian_id);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $this->handleSettingsSubmission($userModel, $user);
+        }
+
+        $this->render('guardian/settings', [
+            'pageTitle' => 'Settings - BESEMS',
+            'user' => $user,
+            'success_message' => $this->getSuccessMessage(),
+            'error_message' => $this->getErrorMessage()
+        ]);
+    }
+
+    private function handleSettingsSubmission($userModel, $user)
+    {
+        $action = $_POST['action'] ?? '';
+
+        if ($action === 'update_profile') {
+            $this->handleProfileUpdate($userModel, $user);
+        } elseif ($action === 'change_password') {
+            $this->handlePasswordChange($userModel, $user);
+        }
+    }
+
+    private function handleProfileUpdate($userModel, $user)
+    {
+        $errors = [];
+
+        $email_error = $this->validateEmail($_POST['email']);
+        if ($email_error) $errors[] = $email_error;
+
+        $contact_error = $this->validateContactNumber($_POST['contact_number']);
+        if ($contact_error) $errors[] = $contact_error;
+
+        // Check email uniqueness
+        if ($_POST['email'] !== $user['email']) {
+            $existing = $userModel->findByEmail($_POST['email']);
+            if ($existing && $existing['user_id'] != $user['user_id']) {
+                $errors[] = "Email is already used by another account";
+            }
+        }
+
+        if (empty($errors)) {
+            $data = [
+                'email' => trim($_POST['email']),
+                'contact_number' => trim($_POST['contact_number'])
+            ];
+
+            if ($userModel->updateProfile($user['user_id'], $data)) {
+                $_SESSION['email'] = $data['email'];
+                $this->setSuccessMessage("Profile updated successfully!");
+            } else {
+                $this->setErrorMessage("Failed to update profile");
+            }
+        } else {
+            $this->setErrorMessage(implode('<br>', $errors));
+        }
+    }
+
+    private function handlePasswordChange($userModel, $user)
+    {
+        $errors = [];
+
+        if (empty($_POST['current_password'])) {
+            $errors[] = "Current password is required";
+        } elseif (!$userModel->verifyPassword($user, $_POST['current_password'])) {
+            $errors[] = "Current password is incorrect";
+        }
+
+        $password_error = $this->validatePassword($_POST['new_password']);
+        if ($password_error) $errors[] = $password_error;
+
+        if ($_POST['new_password'] !== $_POST['confirm_password']) {
+            $errors[] = "New passwords do not match";
+        }
+
+        if (empty($errors)) {
+            if ($userModel->updatePassword($user['user_id'], $_POST['new_password'])) {
+                $this->setSuccessMessage("Password changed successfully!");
+            } else {
+                $this->setErrorMessage("Failed to change password");
+            }
+        } else {
+            $this->setErrorMessage(implode('<br>', $errors));
+        }
+    }
+
+    // ==================== ANNOUNCEMENTS ====================
+    
+    public function announcements()
+    {
+        $this->requireGuardian();
+        
+        $announcementModel = new Announcement();
+
+        $type_filter = $_GET['type'] ?? '';
+        $search = $_GET['search'] ?? '';
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $per_page = 9;
+        $offset = ($page - 1) * $per_page;
+
+        $result = $announcementModel->getAnnouncementsWithFilters($type_filter, $search, $per_page, $offset);
+
+        $this->render('guardian/announcements', [
+            'pageTitle' => 'Announcements - BESEMS',
+            'announcements' => $result['announcements'],
+            'type_filter' => $type_filter,
+            'search' => $search,
+            'current_page' => $page,
+            'total_pages' => ceil($result['total'] / $per_page),
+            'total_records' => $result['total'],
+            'counts_by_type' => $announcementModel->getAnnouncementCountsByType()
+        ]);
+    }
+
+    public function viewAnnouncement()
+    {
+        $this->requireGuardian();
+        
+        $announcement_id = $_GET['id'] ?? null;
+        
+        if (!$announcement_id) {
+            header('Location: announcements');
+            exit;
+        }
+
+        $announcementModel = new Announcement();
+        $announcement = $announcementModel->getAnnouncementById($announcement_id);
+
+        if (!$announcement) {
+            $this->redirectWithError('announcements', "Announcement not found");
+        }
+
+        $this->render('guardian/view-announcement', [
+            'pageTitle' => 'View Announcement - BESEMS',
+            'announcement' => $announcement
+        ]);
+    }
+
+    // ==================== HELPER METHODS ====================
+    
     private function exportStudentsToCSV($students)
     {
         header('Content-Type: text/csv');
         header('Content-Disposition: attachment; filename="my_students_' . date('Y-m-d') . '.csv"');
-
+        
         $output = fopen('php://output', 'w');
-
-        // CSV Headers
-        fputcsv($output, [
-            'LRN',
-            'Full Name',
-            'Gender',
-            'Age',
-            'Date of Birth',
-            'Grade Level',
-            'Section',
-            'Enrollment Status',
-            'Student Status',
-            'Address',
-            'Father Name',
-            'Mother Name',
-            'Contact Number'
-        ]);
-
-        // CSV Data
+        
+        fputcsv($output, ['LRN', 'Full Name', 'Gender', 'Age', 'Date of Birth', 'Grade Level', 'Section', 'Enrollment Status', 'Student Status', 'Address', 'Father Name', 'Mother Name', 'Contact Number']);
+        
         foreach ($students as $student) {
-            $full_name = trim($student['first_name'] . ' ' .
-                ($student['middle_name'] ?? '') . ' ' .
-                $student['last_name'] . ' ' .
-                ($student['name_extension'] ?? ''));
-
-            $address = trim(($student['house_number'] ?? '') . ' ' .
-                ($student['street_name'] ?? '') . ', ' .
-                $student['barangay'] . ', ' .
-                $student['city_municipality'] . ', ' .
-                $student['province']);
-
+            $full_name = trim($student['first_name'] . ' ' . ($student['middle_name'] ?? '') . ' ' . $student['last_name'] . ' ' . ($student['name_extension'] ?? ''));
+            $address = trim(($student['house_number'] ?? '') . ' ' . ($student['street_name'] ?? '') . ', ' . $student['barangay'] . ', ' . $student['city_municipality'] . ', ' . $student['province']);
+            
             fputcsv($output, [
                 $student['lrn'],
                 $full_name,
@@ -272,275 +439,7 @@ class GuardianController extends BaseController
                 $student['father_contact'] ?? $student['mother_contact'] ?? 'N/A'
             ]);
         }
-
+        
         fclose($output);
-    }
-
-    public function requirements()
-    {
-        // Check if user is logged in and is a guardian
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
-            header('Location: login');
-            exit;
-        }
-
-        $requirementModel = new Requirement();
-        $guardian_id = $_SESSION['user_id'];
-        $studentModel = new Student();
-
-        // Get all students for dropdown
-        $all_students = $studentModel->getStudentsListByGuardian($guardian_id);
-
-        // Get selected student ID
-        $student_id = $_GET['student_id'] ?? null;
-
-        // If no student selected but students exist, select the first one
-        if (!$student_id && !empty($all_students)) {
-            $student_id = $all_students[0]['student_id'];
-        }
-
-        $student = null;
-        $success_message = null;
-        $error_message = null;
-
-        if ($student_id) {
-            // Get student details with requirements
-            $student = $studentModel->getStudentWithRequirements($student_id, $guardian_id);
-
-            // Handle form submission
-            if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['student_id']) && $_POST['student_id'] == $student_id) {
-
-                // Collect requirements data
-                $requirements = [
-                    'birth_certificate' => isset($_POST['birth_certificate']) ? 1 : 0,
-                    'report_card_form137' => isset($_POST['report_card_form137']) ? 1 : 0,
-                    'good_moral_certificate' => isset($_POST['good_moral_certificate']) ? 1 : 0,
-                    'certificate_of_completion' => isset($_POST['certificate_of_completion']) ? 1 : 0,
-                    'id_picture_2x2' => isset($_POST['id_picture_2x2']) ? 1 : 0,
-                    'transfer_credential' => isset($_POST['transfer_credential']) ? 1 : 0,
-                    'medical_certificate' => isset($_POST['medical_certificate']) ? 1 : 0
-                ];
-
-                // Check if all required documents are submitted
-                $all_required_submitted = $requirements['birth_certificate'] &&
-                    $requirements['report_card_form137'] &&
-                    $requirements['good_moral_certificate'] &&
-                    $requirements['certificate_of_completion'] &&
-                    $requirements['id_picture_2x2'];
-
-                // Determine enrollment status
-                if ($all_required_submitted) {
-                    $requirements['enrollment_status'] = 'For Review';
-                } else {
-                    $requirements['enrollment_status'] = 'Incomplete';
-                }
-
-                // Update requirements
-                if ($requirementModel->updateRequirements($student_id, $requirements)) {
-                    $success_message = "Requirements updated successfully! " .
-                        ($all_required_submitted ? "Your enrollment is now ready for admin review." : "Please complete all required documents.");
-
-                    // Refresh student data
-                    $student = $studentModel->getStudentWithRequirements($student_id, $guardian_id);
-                } else {
-                    $error_message = "Failed to update requirements. Please try again.";
-                }
-            }
-        }
-
-        // Check for success message from add-student
-        if (isset($_SESSION['student_added_success'])) {
-            $success_message = $_SESSION['student_added_success'];
-            unset($_SESSION['student_added_success']);
-        }
-
-        $this->render('requirements', [
-            'pageTitle' => 'Student Requirements - BESEMS',
-            'all_students' => $all_students,
-            'student' => $student,
-            'selected_student_id' => $student_id,
-            'success_message' => $success_message,
-            'error_message' => $error_message
-        ]);
-    }
-
-    //settings
-    public function settings()
-    {
-        // Check if user is logged in and is a guardian
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
-            header('Location: login');
-            exit;
-        }
-
-        $guardian_id = $_SESSION['user_id'];
-        $userModel = new User();
-
-        // Get current user data
-        $user = $userModel->findById($guardian_id);
-
-        $success_message = null;
-        $error_message = null;
-
-        // Handle form submission
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $action = $_POST['action'] ?? '';
-
-            if ($action === 'update_profile') {
-                $errors = [];
-
-                // Validate email
-                if (empty($_POST['email']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-                    $errors[] = "Valid email address is required";
-                }
-
-                // Validate contact number
-                if (empty($_POST['contact_number']) || !preg_match('/^09[0-9]{9}$/', $_POST['contact_number'])) {
-                    $errors[] = "Valid contact number is required (09XXXXXXXXX)";
-                }
-
-                // Check if email is already used by another user
-                if (!empty($_POST['email']) && $_POST['email'] !== $user['email']) {
-                    $existing_user = $userModel->findByEmail($_POST['email']);
-                    if ($existing_user && $existing_user['user_id'] != $guardian_id) {
-                        $errors[] = "Email is already used by another account";
-                    }
-                }
-
-                if (empty($errors)) {
-                    $data = [
-                        'email' => trim($_POST['email']),
-                        'contact_number' => trim($_POST['contact_number'])
-                    ];
-
-                    if ($userModel->updateProfile($guardian_id, $data)) {
-                        $success_message = "Profile updated successfully!";
-                        $_SESSION['email'] = $data['email'];
-                        // Refresh user data
-                        $user = $userModel->findById($guardian_id);
-                    } else {
-                        $error_message = "Failed to update profile. Please try again.";
-                    }
-                } else {
-                    $error_message = implode('<br>', $errors);
-                }
-            }
-
-            if ($action === 'change_password') {
-                $errors = [];
-
-                // Validate current password
-                if (empty($_POST['current_password'])) {
-                    $errors[] = "Current password is required";
-                } elseif (!password_verify($_POST['current_password'], $user['password'])) {
-                    $errors[] = "Current password is incorrect";
-                }
-
-                // Validate new password
-                if (empty($_POST['new_password'])) {
-                    $errors[] = "New password is required";
-                } elseif (strlen($_POST['new_password']) < 6) {
-                    $errors[] = "New password must be at least 6 characters";
-                }
-
-                // Validate password confirmation
-                if (empty($_POST['confirm_password'])) {
-                    $errors[] = "Please confirm your new password";
-                } elseif ($_POST['new_password'] !== $_POST['confirm_password']) {
-                    $errors[] = "New passwords do not match";
-                }
-
-                if (empty($errors)) {
-                    if ($userModel->updatePassword($guardian_id, $_POST['new_password'])) {
-                        $success_message = "Password changed successfully!";
-                    } else {
-                        $error_message = "Failed to change password. Please try again.";
-                    }
-                } else {
-                    $error_message = implode('<br>', $errors);
-                }
-            }
-        }
-
-        $this->render('settings', [
-            'pageTitle' => 'Settings - BESEMS',
-            'user' => $user,
-            'success_message' => $success_message,
-            'error_message' => $error_message
-        ]);
-    }
-
-    public function announcements()
-    {
-        // Check if user is logged in and is a guardian
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
-            header('Location: login');
-            exit;
-        }
-
-        $announcementModel = new Announcement();
-
-        // Get filter parameters
-        $type_filter = $_GET['type'] ?? '';
-        $search = $_GET['search'] ?? '';
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $per_page = 9;
-        $offset = ($page - 1) * $per_page;
-
-        // Get filtered announcements with pagination
-        $result = $announcementModel->getAnnouncementsWithFilters(
-            $type_filter,
-            $search,
-            $per_page,
-            $offset
-        );
-
-        $announcements = $result['announcements'];
-        $total_records = $result['total'];
-        $total_pages = ceil($total_records / $per_page);
-
-        // Get counts by type
-        $counts_by_type = $announcementModel->getAnnouncementCountsByType();
-
-        $this->render('announcements', [
-            'pageTitle' => 'Announcements - BESEMS',
-            'announcements' => $announcements,
-            'type_filter' => $type_filter,
-            'search' => $search,
-            'current_page' => $page,
-            'total_pages' => $total_pages,
-            'total_records' => $total_records,
-            'counts_by_type' => $counts_by_type
-        ]);
-    }
-
-    public function viewAnnouncement()
-    {
-        // Check if user is logged in and is a guardian
-        if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'guardian') {
-            header('Location: login');
-            exit;
-        }
-
-        $announcement_id = $_GET['id'] ?? null;
-
-        if (!$announcement_id) {
-            header('Location: announcements');
-            exit;
-        }
-
-        $announcementModel = new Announcement();
-        $announcement = $announcementModel->getAnnouncementById($announcement_id);
-
-        if (!$announcement) {
-            $_SESSION['error'] = "Announcement not found.";
-            header('Location: announcements');
-            exit;
-        }
-
-        $this->render('view-announcement', [
-            'pageTitle' => 'View Announcement - BESEMS',
-            'announcement' => $announcement
-        ]);
     }
 }
