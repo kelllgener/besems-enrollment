@@ -14,6 +14,7 @@ class Student
         $this->db = $dbConfig->getConnection();
     }
 
+    
     // Get all students for a specific guardian
     public function getStudentsByGuardian($guardian_id)
     {
@@ -33,129 +34,151 @@ class Student
             WHERE s.guardian_id = ?
             ORDER BY s.created_at DESC
         ");
-
+        
         $stmt->bind_param("i", $guardian_id);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         $students = [];
         while ($row = $result->fetch_assoc()) {
             $students[] = $row;
         }
-
-        return $students;
-    }
-
-    // Get all students for requirements dropdown
-    public function getStudentsListByGuardian($guardian_id)
-    {
-        $stmt = $this->db->prepare("
-        SELECT 
-            s.student_id,
-            s.lrn,
-            s.first_name,
-            s.last_name,
-            sr.enrollment_status,
-            TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
-        FROM students s
-        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
-        WHERE s.guardian_id = ?
-        ORDER BY s.first_name ASC
-    ");
-
-        $stmt->bind_param("i", $guardian_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        $students = [];
-        while ($row = $result->fetch_assoc()) {
-            $students[] = $row;
-        }
-
+        
         return $students;
     }
 
     // Get students with filters and pagination
     public function getStudentsWithFilters($guardian_id, $search = '', $status_filter = '', $enrollment_filter = '', $limit = 10, $offset = 0)
     {
-        // 1. Sanitize pagination inputs
-        $offset = max(0, (int)$offset);
-        $limit = max(1, (int)$limit);
-        $guardian_id = (int)$guardian_id;
-
-        // 2. Build the base WHERE conditions
-        $where = "WHERE s.guardian_id = {$guardian_id}";
-
+        $sql = "
+            SELECT 
+                s.*,
+                gl.grade_name,
+                sec.section_name,
+                sec.room_number,
+                sr.enrollment_status,
+                sr.remarks,
+                TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
+            FROM students s
+            LEFT JOIN sections sec ON s.assigned_section_id = sec.section_id
+            LEFT JOIN grade_levels gl ON sec.grade_id = gl.grade_id
+            LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+            WHERE s.guardian_id = {$guardian_id}
+        ";
+        
+        $count_sql = "
+            SELECT COUNT(*) as total
+            FROM students s
+            LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+            WHERE s.guardian_id = {$guardian_id}
+        ";
+        
+        // Add search filter
         if (!empty($search)) {
             $search = $this->db->real_escape_string($search);
-            $where .= " AND (s.lrn LIKE '%{$search}%' OR s.first_name LIKE '%{$search}%' OR s.last_name LIKE '%{$search}%' OR CONCAT(s.first_name, ' ', s.last_name) LIKE '%{$search}%')";
+            $search_condition = " AND (s.lrn LIKE '%{$search}%' OR s.first_name LIKE '%{$search}%' OR s.last_name LIKE '%{$search}%' OR CONCAT(s.first_name, ' ', s.last_name) LIKE '%{$search}%')";
+            $sql .= $search_condition;
+            $count_sql .= $search_condition;
         }
-
+        
+        // Add student status filter
         if (!empty($status_filter)) {
             $status_filter = $this->db->real_escape_string($status_filter);
-            $where .= " AND s.student_status = '{$status_filter}'";
+            $status_condition = " AND s.student_status = '{$status_filter}'";
+            $sql .= $status_condition;
+            $count_sql .= $status_condition;
         }
-
+        
+        // Add enrollment status filter
         if (!empty($enrollment_filter)) {
             $enrollment_filter = $this->db->real_escape_string($enrollment_filter);
-            $where .= " AND sr.enrollment_status = '{$enrollment_filter}'";
+            $enrollment_condition = " AND sr.enrollment_status = '{$enrollment_filter}'";
+            $sql .= $enrollment_condition;
+            $count_sql .= $enrollment_condition;
         }
-
-        // 3. Get total count first
-        $count_sql = "SELECT COUNT(*) as total FROM students s 
-                  LEFT JOIN student_requirements sr ON s.student_id = sr.student_id 
-                  {$where}";
-
+        
+        // Get total count
         $count_result = $this->db->query($count_sql);
-        $total = ($count_result) ? $count_result->fetch_assoc()['total'] : 0;
-
-        // 4. Get the actual data
-        $sql = "
-        SELECT 
-            s.*,
-            gl.grade_name,
-            sec.section_name,
-            sec.room_number,
-            sr.enrollment_status,
-            sr.remarks,
-            TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
-        FROM students s
-        LEFT JOIN sections sec ON s.assigned_section_id = sec.section_id
-        LEFT JOIN grade_levels gl ON sec.grade_id = gl.grade_id
-        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
-        {$where}
-        ORDER BY s.created_at DESC 
-        LIMIT {$limit} OFFSET {$offset}
-    ";
-
+        $total = $count_result->fetch_assoc()['total'];
+        
+        // Add ordering and pagination
+        $sql .= " ORDER BY s.created_at DESC LIMIT {$limit} OFFSET {$offset}";
+        
+        // Execute query
         $result = $this->db->query($sql);
-
+        
         $students = [];
         if ($result) {
             while ($row = $result->fetch_assoc()) {
                 $students[] = $row;
             }
         }
-
+        
         return [
             'students' => $students,
-            'total' => (int)$total
+            'total' => $total
         ];
     }
 
-    // Get requirements status for a specific student
-    public function getStudentRequirements($student_id)
+    // Get student with requirements by ID (with authorization check)
+    public function getStudentWithRequirements($student_id, $guardian_id = null)
     {
-        $stmt = $this->db->prepare("
-            SELECT * FROM student_requirements 
-            WHERE student_id = ?
-        ");
-
-        $stmt->bind_param("i", $student_id);
+        $sql = "
+            SELECT 
+                s.*,
+                sr.*,
+                gl.grade_name,
+                sec.section_name,
+                TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
+            FROM students s
+            LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+            LEFT JOIN sections sec ON s.assigned_section_id = sec.section_id
+            LEFT JOIN grade_levels gl ON sec.grade_id = gl.grade_id
+            WHERE s.student_id = ?
+        ";
+        
+        if ($guardian_id !== null) {
+            $sql .= " AND s.guardian_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("ii", $student_id, $guardian_id);
+        } else {
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $student_id);
+        }
+        
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         return $result->fetch_assoc();
+    }
+
+    // Get all students for requirements dropdown
+    public function getStudentsListByGuardian($guardian_id)
+    {
+        $stmt = $this->db->prepare("
+            SELECT 
+                s.student_id,
+                s.lrn,
+                s.first_name,
+                s.last_name,
+                sr.enrollment_status,
+                TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
+            FROM students s
+            LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+            WHERE s.guardian_id = ?
+            ORDER BY s.first_name ASC
+        ");
+        
+        $stmt->bind_param("i", $guardian_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $students = [];
+        while ($row = $result->fetch_assoc()) {
+            $students[] = $row;
+        }
+        
+        return $students;
     }
 
     // Find student by LRN
@@ -165,97 +188,6 @@ class Student
         $stmt->bind_param("s", $lrn);
         $stmt->execute();
         $result = $stmt->get_result();
-        return $result->fetch_assoc();
-    }
-
-    // Create new student
-    public function createStudent($data)
-    {
-        $stmt = $this->db->prepare("
-        INSERT INTO students (
-            guardian_id, lrn, first_name, middle_name, last_name, name_extension,
-            date_of_birth, place_of_birth, gender, mother_tongue, religion, indigenous_people,
-            house_number, street_name, barangay, city_municipality, province, region, zip_code,
-            father_name, father_occupation, father_contact,
-            mother_name, mother_occupation, mother_contact,
-            guardian_name, guardian_relationship, guardian_occupation,
-            enrollment_type, previous_school, previous_grade_level,
-            student_status
-        ) VALUES (
-            ?, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?, ?, ?,
-            ?, ?, ?,
-            ?, ?, ?,
-            ?, ?, ?,
-            ?, ?, ?,
-            'Active'
-        )
-    ");
-
-        $stmt->bind_param(
-            "issssssssssssssssssssssssssssss", // i + 30 s's = 31 characters
-            $data['guardian_id'],           // 1 - i (integer)
-            $data['lrn'],                   // 2 - s
-            $data['first_name'],            // 3 - s
-            $data['middle_name'],           // 4 - s
-            $data['last_name'],             // 5 - s
-            $data['name_extension'],        // 6 - s
-            $data['date_of_birth'],         // 7 - s
-            $data['place_of_birth'],        // 8 - s
-            $data['gender'],                // 9 - s
-            $data['mother_tongue'],         // 10 - s
-            $data['religion'],              // 11 - s
-            $data['indigenous_people'],     // 12 - s
-            $data['house_number'],          // 13 - s
-            $data['street_name'],           // 14 - s
-            $data['barangay'],              // 15 - s
-            $data['city_municipality'],     // 16 - s
-            $data['province'],              // 17 - s
-            $data['region'],                // 18 - s
-            $data['zip_code'],              // 19 - s
-            $data['father_name'],           // 20 - s
-            $data['father_occupation'],     // 21 - s
-            $data['father_contact'],        // 22 - s
-            $data['mother_name'],           // 23 - s
-            $data['mother_occupation'],     // 24 - s
-            $data['mother_contact'],        // 25 - s
-            $data['guardian_name'],         // 26 - s
-            $data['guardian_relationship'], // 27 - s
-            $data['guardian_occupation'],   // 28 - s
-            $data['enrollment_type'],       // 29 - s
-            $data['previous_school'],       // 30 - s
-            $data['previous_grade_level']   // 31 - s
-        );
-
-        if ($stmt->execute()) {
-            return $this->db->insert_id;
-        }
-
-        return false;
-    }
-
-    // Get student with requirements by ID
-    public function getStudentWithRequirements($student_id, $guardian_id)
-    {
-        $stmt = $this->db->prepare("
-        SELECT 
-            s.*,
-            sr.*,
-            gl.grade_name,
-            sec.section_name,
-            TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
-        FROM students s
-        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
-        LEFT JOIN sections sec ON s.assigned_section_id = sec.section_id
-        LEFT JOIN grade_levels gl ON sec.grade_id = gl.grade_id
-        WHERE s.student_id = ? AND s.guardian_id = ?
-    ");
-
-        $stmt->bind_param("ii", $student_id, $guardian_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
         return $result->fetch_assoc();
     }
 
@@ -272,11 +204,11 @@ class Student
             FROM students
             WHERE guardian_id = ?
         ");
-
+        
         $stmt->bind_param("i", $guardian_id);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         return $result->fetch_assoc();
     }
 
@@ -294,11 +226,91 @@ class Student
             LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
             WHERE s.guardian_id = ?
         ");
-
+        
         $stmt->bind_param("i", $guardian_id);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         return $result->fetch_assoc();
+    }
+
+    
+    // Create new student
+    public function createStudent($data)
+    {
+        $stmt = $this->db->prepare("
+            INSERT INTO students (
+                guardian_id, lrn, first_name, middle_name, last_name, name_extension,
+                date_of_birth, place_of_birth, gender, mother_tongue, religion, indigenous_people,
+                house_number, street_name, barangay, city_municipality, province, region, zip_code,
+                father_name, father_occupation, father_contact,
+                mother_name, mother_occupation, mother_contact,
+                guardian_name, guardian_relationship, guardian_occupation,
+                enrollment_type, previous_school, previous_grade_level,
+                student_status
+            ) VALUES (
+                ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                ?, ?, ?,
+                'Active'
+            )
+        ");
+        
+        $stmt->bind_param(
+            "issssssssssssssssssssssssssssss",
+            $data['guardian_id'],
+            $data['lrn'],
+            $data['first_name'],
+            $data['middle_name'],
+            $data['last_name'],
+            $data['name_extension'],
+            $data['date_of_birth'],
+            $data['place_of_birth'],
+            $data['gender'],
+            $data['mother_tongue'],
+            $data['religion'],
+            $data['indigenous_people'],
+            $data['house_number'],
+            $data['street_name'],
+            $data['barangay'],
+            $data['city_municipality'],
+            $data['province'],
+            $data['region'],
+            $data['zip_code'],
+            $data['father_name'],
+            $data['father_occupation'],
+            $data['father_contact'],
+            $data['mother_name'],
+            $data['mother_occupation'],
+            $data['mother_contact'],
+            $data['guardian_name'],
+            $data['guardian_relationship'],
+            $data['guardian_occupation'],
+            $data['enrollment_type'],
+            $data['previous_school'],
+            $data['previous_grade_level']
+        );
+        
+        if ($stmt->execute()) {
+            return $this->db->insert_id;
+        }
+        
+        return false;
+    }
+
+    
+    // Check if student belongs to guardian (authorization)
+    public function belongsToGuardian($student_id, $guardian_id)
+    {
+        $stmt = $this->db->prepare("SELECT student_id FROM students WHERE student_id = ? AND guardian_id = ?");
+        $stmt->bind_param("ii", $student_id, $guardian_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        return $result->num_rows > 0;
     }
 }

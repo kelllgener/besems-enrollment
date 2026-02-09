@@ -14,6 +14,7 @@ class User
         $this->db = $dbConfig->getConnection();
     }
 
+    
     // Find user by username (for login)
     public function findByUsername($username)
     {
@@ -34,27 +35,6 @@ class User
         return $result->fetch_assoc();
     }
 
-    // Create new guardian user (simplified)
-    public function create($data)
-    {
-        $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-
-        $stmt = $this->db->prepare("
-            INSERT INTO users (username, password, email, contact_number, role, is_active) 
-            VALUES (?, ?, ?, ?, 'guardian', 1)
-        ");
-
-        $stmt->bind_param(
-            "ssss",
-            $data['username'],
-            $hashedPassword,
-            $data['email'],
-            $data['contact_number']
-        );
-
-        return $stmt->execute();
-    }
-
     // Get user by ID
     public function findById($user_id)
     {
@@ -65,22 +45,45 @@ class User
         return $result->fetch_assoc();
     }
 
+    
+    // Create new guardian user
+    public function create($data)
+    {
+        $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+        
+        $stmt = $this->db->prepare("
+            INSERT INTO users (username, password, email, contact_number, role, is_active) 
+            VALUES (?, ?, ?, ?, 'guardian', 1)
+        ");
+        
+        $stmt->bind_param(
+            "ssss",
+            $data['username'],
+            $hashedPassword,
+            $data['email'],
+            $data['contact_number']
+        );
+        
+        return $stmt->execute();
+    }
+
+    
     // Update user profile
     public function updateProfile($user_id, $data)
     {
         $stmt = $this->db->prepare("
-        UPDATE users 
-        SET email = ?, contact_number = ?, updated_at = NOW()
-        WHERE user_id = ?
-    ");
-
+            UPDATE users 
+            SET email = ?, contact_number = ?, updated_at = NOW()
+            WHERE user_id = ?
+        ");
+        
         $stmt->bind_param(
             "ssi",
             $data['email'],
             $data['contact_number'],
             $user_id
         );
-
+        
         return $stmt->execute();
     }
 
@@ -88,15 +91,15 @@ class User
     public function updatePassword($user_id, $new_password)
     {
         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-
+        
         $stmt = $this->db->prepare("
-        UPDATE users 
-        SET password = ?, updated_at = NOW()
-        WHERE user_id = ?
-    ");
-
+            UPDATE users 
+            SET password = ?, updated_at = NOW()
+            WHERE user_id = ?
+        ");
+        
         $stmt->bind_param("si", $hashed_password, $user_id);
-
+        
         return $stmt->execute();
     }
 
@@ -104,13 +107,26 @@ class User
     public function deactivateAccount($user_id)
     {
         $stmt = $this->db->prepare("
-        UPDATE users 
-        SET is_active = 0, updated_at = NOW()
-        WHERE user_id = ?
-    ");
-
+            UPDATE users 
+            SET is_active = 0, updated_at = NOW()
+            WHERE user_id = ?
+        ");
+        
         $stmt->bind_param("i", $user_id);
-
+        
         return $stmt->execute();
+    }
+
+    
+    // Verify password
+    public function verifyPassword($user, $password)
+    {
+        return password_verify($password, $user['password']);
+    }
+
+    // Check if user is active
+    public function isActive($user)
+    {
+        return $user['is_active'] == 1;
     }
 }
