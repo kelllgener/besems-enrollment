@@ -1,6 +1,6 @@
 <!-- Main Container -->
 <div class="container-fluid py-4">
-    
+
     <!-- 1. HEADER SECTION -->
     <div class="row align-items-center mb-4 g-3">
         <div class="col-md">
@@ -28,8 +28,8 @@
                             <span class="input-group-text bg-light border-0">
                                 <i class="bi bi-search text-muted"></i>
                             </span>
-                            <input type="text" name="search" class="form-control border-0 bg-light" 
-                                   placeholder="Search by title or content..." value="<?= htmlspecialchars($search) ?>">
+                            <input type="text" name="search" class="form-control border-0 bg-light"
+                                placeholder="Search by title or content..." value="<?= htmlspecialchars($search) ?>">
                         </div>
                     </div>
 
@@ -74,6 +74,10 @@
                                 <i class="bi bi-x-lg me-1"></i> Clear Filters
                             </a>
                         <?php endif; ?>
+                        <a href="my-students?export=csv&search=<?= urlencode($search) ?>&status=<?= urlencode($status_filter) ?>&enrollment=<?= urlencode($enrollment_filter) ?>"
+                            class="btn btn-success bg-opacity-10 text-white border-success border-opacity-25 btn-sm rounded-pill px-3">
+                            <i class="bi bi-download me-1"></i> Export CSV
+                        </a>
                     </div>
                 </div>
             </form>
@@ -92,7 +96,7 @@
                                     <!-- Type Badge -->
                                     <div class="position-absolute top-0 end-0 m-3" style="z-index: 1;">
                                         <?php
-                                        $type_badge = match($announcement['announcement_type']) {
+                                        $type_badge = match ($announcement['announcement_type']) {
                                             'Emergency' => 'danger',
                                             'Enrollment' => 'primary',
                                             'Event' => 'info',
@@ -109,7 +113,7 @@
                                         <!-- Icon -->
                                         <div class="mb-3">
                                             <?php
-                                            $icon_class = match($announcement['announcement_type']) {
+                                            $icon_class = match ($announcement['announcement_type']) {
                                                 'Enrollment' => 'bi-clipboard-check text-primary',
                                                 'Event' => 'bi-calendar-event text-info',
                                                 'Holiday' => 'bi-gift text-success',
@@ -148,8 +152,8 @@
 
                                         <!-- Read More Button -->
                                         <div class="d-grid mt-3">
-                                            <a href="view-announcement?id=<?= $announcement['announcement_id'] ?>" 
-                                               class="btn btn-primary rounded-pill btn-sm shadow-sm">
+                                            <a href="view-announcement?id=<?= $announcement['announcement_id'] ?>"
+                                                class="btn btn-primary rounded-pill btn-sm shadow-sm">
                                                 <i class="bi bi-eye me-1"></i>Read More
                                             </a>
                                         </div>
@@ -171,11 +175,11 @@
                                         <i class="bi bi-chevron-left"></i>
                                     </a>
                                 </li>
-                                
+
                                 <?php
                                 $start_page = max(1, $current_page - 2);
                                 $end_page = min($total_pages, $current_page + 2);
-                                
+
                                 if ($start_page > 1): ?>
                                     <li class="page-item">
                                         <a class="page-link rounded-circle me-1 border-0" href="?page=1&search=<?= urlencode($search) ?>&type=<?= urlencode($type_filter) ?>">1</a>
