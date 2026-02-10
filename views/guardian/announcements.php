@@ -10,7 +10,7 @@
             <p class="text-muted mb-0">Stay updated with the latest school news and events.</p>
         </div>
         <div class="col-md-auto">
-            <a href="guardian-dashboard" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+            <a href="dashboard" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
                 <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
             </a>
         </div>
