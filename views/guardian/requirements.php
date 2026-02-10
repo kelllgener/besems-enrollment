@@ -8,7 +8,7 @@
                 </h3>
                 <p class="text-muted mb-0">Upload and manage enrollment documents</p>
             </div>
-            <a href="guardian-dashboard" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
+            <a href="dashboard" class="btn btn-outline-secondary rounded-pill px-4 shadow-sm">
                 <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
             </a>
         </div>
