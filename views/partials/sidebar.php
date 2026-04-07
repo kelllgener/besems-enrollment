@@ -41,9 +41,9 @@ $menuItems = [
         'roles' => ['admin']
     ],
     [
-        'label' => 'Students',
+        'label' => 'Enrollment Management',
         'icon' => 'bi-people',
-        'url' => 'students',
+        'url' => 'enrollment-management',
         'roles' => ['admin']
     ],
     [

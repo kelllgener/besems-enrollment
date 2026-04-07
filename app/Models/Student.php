@@ -14,7 +14,7 @@ class Student
         $this->db = $dbConfig->getConnection();
     }
 
-    
+
     // Get all students for a specific guardian
     public function getStudentsByGuardian($guardian_id)
     {
@@ -34,16 +34,16 @@ class Student
             WHERE s.guardian_id = ?
             ORDER BY s.created_at DESC
         ");
-        
+
         $stmt->bind_param("i", $guardian_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         $students = [];
         while ($row = $result->fetch_assoc()) {
             $students[] = $row;
         }
-        
+
         return $students;
     }
 
@@ -75,14 +75,14 @@ class Student
             LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
             WHERE s.guardian_id = {$guardian_id}
         ";
-        
+
         $count_sql = "
             SELECT COUNT(*) as total
             FROM students s
             LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
             WHERE s.guardian_id = {$guardian_id}
         ";
-        
+
         // Add search filter
         if (!empty($search)) {
             $search = $this->db->real_escape_string($search);
@@ -90,7 +90,7 @@ class Student
             $sql .= $search_condition;
             $count_sql .= $search_condition;
         }
-        
+
         // Add student status filter
         if (!empty($status_filter)) {
             $status_filter = $this->db->real_escape_string($status_filter);
@@ -98,7 +98,7 @@ class Student
             $sql .= $status_condition;
             $count_sql .= $status_condition;
         }
-        
+
         // Add enrollment status filter
         if (!empty($enrollment_filter)) {
             $enrollment_filter = $this->db->real_escape_string($enrollment_filter);
@@ -106,24 +106,24 @@ class Student
             $sql .= $enrollment_condition;
             $count_sql .= $enrollment_condition;
         }
-        
+
         // Get total count
         $count_result = $this->db->query($count_sql);
         $total = $count_result->fetch_assoc()['total'];
-        
+
         // Add ordering and pagination
         $sql .= " ORDER BY s.created_at DESC LIMIT {$limit} OFFSET {$offset}";
-        
+
         // Execute query
         $result = $this->db->query($sql);
-        
+
         $students = [];
         if ($result) {
             while ($row = $result->fetch_assoc()) {
                 $students[] = $row;
             }
         }
-        
+
         return [
             'students' => $students,
             'total' => $total
@@ -146,7 +146,7 @@ class Student
             LEFT JOIN grade_levels gl ON sec.grade_id = gl.grade_id
             WHERE s.student_id = ?
         ";
-        
+
         if ($guardian_id !== null) {
             $sql .= " AND s.guardian_id = ?";
             $stmt = $this->db->prepare($sql);
@@ -155,10 +155,10 @@ class Student
             $stmt = $this->db->prepare($sql);
             $stmt->bind_param("i", $student_id);
         }
-        
+
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         return $result->fetch_assoc();
     }
 
@@ -178,16 +178,16 @@ class Student
             WHERE s.guardian_id = ?
             ORDER BY s.first_name ASC
         ");
-        
+
         $stmt->bind_param("i", $guardian_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         $students = [];
         while ($row = $result->fetch_assoc()) {
             $students[] = $row;
         }
-        
+
         return $students;
     }
 
@@ -214,11 +214,11 @@ class Student
             FROM students
             WHERE guardian_id = ?
         ");
-        
+
         $stmt->bind_param("i", $guardian_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         return $result->fetch_assoc();
     }
 
@@ -236,15 +236,15 @@ class Student
             LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
             WHERE s.guardian_id = ?
         ");
-        
+
         $stmt->bind_param("i", $guardian_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         return $result->fetch_assoc();
     }
 
-    
+
     // Create new student
     public function createStudent($data)
     {
@@ -269,7 +269,7 @@ class Student
                 'Active'
             )
         ");
-        
+
         $stmt->bind_param(
             "issssssssssssssssssssssssssssss",
             $data['guardian_id'],
@@ -304,15 +304,15 @@ class Student
             $data['previous_school'],
             $data['previous_grade_level']
         );
-        
+
         if ($stmt->execute()) {
             return $this->db->insert_id;
         }
-        
+
         return false;
     }
 
-    
+
     // Check if student belongs to guardian (authorization)
     public function belongsToGuardian($student_id, $guardian_id)
     {
@@ -320,7 +320,201 @@ class Student
         $stmt->bind_param("ii", $student_id, $guardian_id);
         $stmt->execute();
         $result = $stmt->get_result();
-        
+
         return $result->num_rows > 0;
+    }
+
+
+    // ==================== ADMIN ENROLLMENT MANAGEMENT ====================
+
+    // Get all students with filters (for admin - no guardian_id restriction)
+
+    public function getAllStudentsWithFilters($search = '', $status_filter = '', $enrollment_filter = '', $grade_filter = '', $limit = 10, $offset = 0)
+    {
+        // Ensure limit and offset are non-negative integers
+        $limit = (int)$limit;
+        $offset = (int)$offset;
+        if ($limit < 1) {
+            $limit = 10;
+        }
+        if ($offset < 0) {
+            $offset = 0;
+        }
+
+        $sql = "
+        SELECT 
+            s.*,
+            gl.grade_name,
+            sec.section_name,
+            sec.room_number,
+            sr.enrollment_status,
+            sr.remarks,
+            sr.submitted_at,
+            u.username as guardian_username,
+            u.email as guardian_email,
+            u.contact_number as guardian_contact,
+            TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
+        FROM students s
+        LEFT JOIN sections sec ON s.assigned_section_id = sec.section_id
+        LEFT JOIN grade_levels gl ON sec.grade_id = gl.grade_id
+        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+        LEFT JOIN users u ON s.guardian_id = u.user_id
+        WHERE 1=1
+    ";
+
+        $count_sql = "
+        SELECT COUNT(*) as total
+        FROM students s
+        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+        LEFT JOIN sections sec ON s.assigned_section_id = sec.section_id
+        WHERE 1=1
+    ";
+
+        // Add search filter
+        if (!empty($search)) {
+            $search = $this->db->real_escape_string($search);
+            $search_condition = " AND (s.lrn LIKE '%{$search}%' OR s.first_name LIKE '%{$search}%' OR s.last_name LIKE '%{$search}%' OR CONCAT(s.first_name, ' ', s.last_name) LIKE '%{$search}%')";
+            $sql .= $search_condition;
+            $count_sql .= $search_condition;
+        }
+
+        // Add student status filter
+        if (!empty($status_filter)) {
+            $status_filter = $this->db->real_escape_string($status_filter);
+            $status_condition = " AND s.student_status = '{$status_filter}'";
+            $sql .= $status_condition;
+            $count_sql .= $status_condition;
+        }
+
+        // Add enrollment status filter
+        if (!empty($enrollment_filter)) {
+            $enrollment_filter = $this->db->real_escape_string($enrollment_filter);
+            $enrollment_condition = " AND sr.enrollment_status = '{$enrollment_filter}'";
+            $sql .= $enrollment_condition;
+            $count_sql .= $enrollment_condition;
+        }
+
+        // Add grade filter
+        if (!empty($grade_filter)) {
+            $grade_filter = $this->db->real_escape_string($grade_filter);
+            $grade_condition = " AND sec.grade_id = '{$grade_filter}'";
+            $sql .= $grade_condition;
+            $count_sql .= $grade_condition;
+        }
+
+        // Get total count
+        $count_result = $this->db->query($count_sql);
+        $total = $count_result->fetch_assoc()['total'];
+
+        // Add ordering and pagination
+        $sql .= " ORDER BY 
+        CASE sr.enrollment_status
+            WHEN 'For Review' THEN 1
+            WHEN 'Pending' THEN 2
+            WHEN 'Incomplete' THEN 3
+            WHEN 'Approved' THEN 4
+            WHEN 'Declined' THEN 5
+            ELSE 6
+        END,
+        s.created_at DESC 
+        LIMIT {$limit} OFFSET {$offset}
+    ";
+
+        // Execute query
+        $result = $this->db->query($sql);
+
+        $students = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $students[] = $row;
+            }
+        }
+
+        return [
+            'students' => $students,
+            'total' => $total
+        ];
+    }
+
+    // Get enrollment requests count by status
+    public function getEnrollmentRequestsCounts()
+    {
+        $result = $this->db->query("
+        SELECT 
+            COUNT(CASE WHEN sr.enrollment_status = 'Pending' THEN 1 END) as pending,
+            COUNT(CASE WHEN sr.enrollment_status = 'For Review' THEN 1 END) as for_review,
+            COUNT(CASE WHEN sr.enrollment_status = 'Approved' THEN 1 END) as approved,
+            COUNT(CASE WHEN sr.enrollment_status = 'Declined' THEN 1 END) as declined,
+            COUNT(CASE WHEN sr.enrollment_status = 'Incomplete' THEN 1 END) as incomplete
+        FROM students s
+        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+    ");
+
+        return $result->fetch_assoc();
+    }
+
+    // Get student by ID (no authorization check - for admin)
+    public function getStudentById($student_id)
+    {
+        $stmt = $this->db->prepare("
+        SELECT 
+            s.*,
+            gl.grade_name,
+            sec.section_name,
+            sec.room_number,
+            sec.section_id,
+            sr.*,
+            u.username as guardian_username,
+            u.email as guardian_email,
+            u.contact_number as guardian_contact,
+            TIMESTAMPDIFF(YEAR, s.date_of_birth, CURDATE()) as age
+        FROM students s
+        LEFT JOIN sections sec ON s.assigned_section_id = sec.section_id
+        LEFT JOIN grade_levels gl ON sec.grade_id = gl.grade_id
+        LEFT JOIN student_requirements sr ON s.student_id = sr.student_id
+        LEFT JOIN users u ON s.guardian_id = u.user_id
+        WHERE s.student_id = ?
+    ");
+
+        $stmt->bind_param("i", $student_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        return $result->fetch_assoc();
+    }
+
+    // Update enrollment status (Admin action)
+    public function updateEnrollmentStatus($student_id, $status, $remarks, $admin_id)
+    {
+        $stmt = $this->db->prepare("
+        UPDATE student_requirements 
+        SET 
+            enrollment_status = ?,
+            remarks = ?,
+            reviewed_by = ?,
+            reviewed_at = NOW(),
+            approved_by = CASE WHEN ? = 'Approved' THEN ? ELSE approved_by END,
+            approved_at = CASE WHEN ? = 'Approved' THEN NOW() ELSE approved_at END,
+            updated_at = NOW()
+        WHERE student_id = ?
+    ");
+
+        $stmt->bind_param("ssisssi", $status, $remarks, $admin_id, $status, $admin_id, $status, $student_id);
+
+        return $stmt->execute();
+    }
+
+    // Assign student to section
+    public function assignToSection($student_id, $section_id)
+    {
+        $stmt = $this->db->prepare("
+        UPDATE students 
+        SET assigned_section_id = ?, updated_at = NOW()
+        WHERE student_id = ?
+    ");
+
+        $stmt->bind_param("ii", $section_id, $student_id);
+
+        return $stmt->execute();
     }
 }

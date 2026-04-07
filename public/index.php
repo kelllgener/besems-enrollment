@@ -52,6 +52,9 @@ switch ($page) {
 
 
     // Admin routes
+    case 'enrollment-management':
+        (new AdminController())->enrollmentManagement();
+        break;
 
 
 
