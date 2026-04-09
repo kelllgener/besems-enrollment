@@ -133,7 +133,7 @@ class AdminController extends BaseController
         $grade_levels = $gradeLevelModel->getAllGradeLevels();
         $sections = $sectionModel->getAllSections();
 
-        $this->render('admin/review-enrollment', [
+        $this->render('review-enrollment', [
             'pageTitle' => 'Review Enrollment - BESEMS',
             'student' => $student,
             'grade_levels' => $grade_levels,

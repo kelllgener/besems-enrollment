@@ -45,8 +45,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `username`, `password`, `email`, `contact_number`, `role`, `is_active`) VALUES
-(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@besems.com', '09123456789', 'admin', 1);
--- Default password is: password
+(1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@besems.com', '09123456789', 'admin', 1),
+(2, 'guardian', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'guardian@besems.com', '09987654321', 'guardian', 1);
+-- Default password for both is: password
 
 -- --------------------------------------------------------
 
@@ -90,6 +91,24 @@ CREATE TABLE `sections` (
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `sections`
+--
+
+INSERT INTO `sections` (`section_id`, `grade_id`, `section_name`, `room_number`, `max_students`, `adviser_name`, `school_year`, `is_active`) VALUES
+(1, 1, 'Section A', 'Room 101', 40, 'Adviser 1A', '2025-2026', 1),
+(2, 1, 'Section B', 'Room 102', 40, 'Adviser 1B', '2025-2026', 1),
+(3, 2, 'Section A', 'Room 201', 40, 'Adviser 2A', '2025-2026', 1),
+(4, 2, 'Section B', 'Room 202', 40, 'Adviser 2B', '2025-2026', 1),
+(5, 3, 'Section A', 'Room 301', 40, 'Adviser 3A', '2025-2026', 1),
+(6, 3, 'Section B', 'Room 302', 40, 'Adviser 3B', '2025-2026', 1),
+(7, 4, 'Section A', 'Room 401', 40, 'Adviser 4A', '2025-2026', 1),
+(8, 4, 'Section B', 'Room 402', 40, 'Adviser 4B', '2025-2026', 1),
+(9, 5, 'Section A', 'Room 501', 40, 'Adviser 5A', '2025-2026', 1),
+(10, 5, 'Section B', 'Room 502', 40, 'Adviser 5B', '2025-2026', 1),
+(11, 6, 'Section A', 'Room 601', 40, 'Adviser 6A', '2025-2026', 1),
+(12, 6, 'Section B', 'Room 602', 40, 'Adviser 6B', '2025-2026', 1);
 
 -- --------------------------------------------------------
 
@@ -149,6 +168,14 @@ CREATE TABLE `students` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `students`
+--
+
+INSERT INTO `students` (`student_id`, `guardian_id`, `lrn`, `first_name`, `last_name`, `date_of_birth`, `gender`, `barangay`, `city_municipality`, `province`, `guardian_relationship`, `assigned_section_id`, `enrollment_type`) VALUES
+(1, 2, '123456789012', 'John', 'Doe', '2018-05-15', 'Male', 'Brgy. Sample', 'City of Sample', 'Province of Sample', 'Parent', 1, 'New'),
+(2, 2, '987654321098', 'Jane', 'Doe', '2017-08-20', 'Female', 'Brgy. Sample', 'City of Sample', 'Province of Sample', 'Parent', 3, 'Continuing');
+
 -- --------------------------------------------------------
 
 --
@@ -186,6 +213,14 @@ CREATE TABLE `student_requirements` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `student_requirements`
+--
+
+INSERT INTO `student_requirements` (`requirement_id`, `student_id`, `birth_certificate`, `report_card_form137`, `id_picture_2x2`, `enrollment_status`) VALUES
+(1, 1, 1, 0, 1, 'Pending'),
+(2, 2, 1, 1, 1, 'Approved');
+
 -- --------------------------------------------------------
 
 --
@@ -202,6 +237,30 @@ CREATE TABLE `subjects` (
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `subjects`
+--
+
+INSERT INTO `subjects` (`subject_id`, `grade_id`, `subject_code`, `subject_name`, `description`, `units`, `is_active`) VALUES
+(1, 1, 'FIL1', 'Filipino 1', 'Wika at Pagbasa', 1.0, 1),
+(2, 1, 'ENG1', 'English 1', 'Language and Literacy', 1.0, 1),
+(3, 1, 'MATH1', 'Mathematics 1', 'Basic Numeracy', 1.0, 1),
+(4, 2, 'FIL2', 'Filipino 2', 'Wika at Pagbasa', 1.0, 1),
+(5, 2, 'ENG2', 'English 2', 'Language and Literacy', 1.0, 1),
+(6, 2, 'MATH2', 'Mathematics 2', 'Basic Numeracy', 1.0, 1),
+(7, 3, 'FIL3', 'Filipino 3', 'Wika at Pagbasa', 1.0, 1),
+(8, 3, 'ENG3', 'English 3', 'Language and Literacy', 1.0, 1),
+(9, 3, 'MATH3', 'Mathematics 3', 'Basic Numeracy', 1.0, 1),
+(10, 4, 'FIL4', 'Filipino 4', 'Wika at Pagbasa', 1.0, 1),
+(11, 4, 'ENG4', 'English 4', 'Language and Literacy', 1.0, 1),
+(12, 4, 'MATH4', 'Mathematics 4', 'Basic Numeracy', 1.0, 1),
+(13, 5, 'FIL5', 'Filipino 5', 'Wika at Pagbasa', 1.0, 1),
+(14, 5, 'ENG5', 'English 5', 'Language and Literacy', 1.0, 1),
+(15, 5, 'MATH5', 'Mathematics 5', 'Basic Numeracy', 1.0, 1),
+(16, 6, 'FIL6', 'Filipino 6', 'Wika at Pagbasa', 1.0, 1),
+(17, 6, 'ENG6', 'English 6', 'Language and Literacy', 1.0, 1),
+(18, 6, 'MATH6', 'Mathematics 6', 'Basic Numeracy', 1.0, 1);
 
 -- --------------------------------------------------------
 
@@ -360,22 +419,22 @@ ALTER TABLE `activity_logs`
 --
 
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 ALTER TABLE `grade_levels`
   MODIFY `grade_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 ALTER TABLE `sections`
-  MODIFY `section_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `section_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 ALTER TABLE `students`
-  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 ALTER TABLE `student_requirements`
-  MODIFY `requirement_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `requirement_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 ALTER TABLE `subjects`
-  MODIFY `subject_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `subject_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 ALTER TABLE `schedules`
   MODIFY `schedule_id` int(11) NOT NULL AUTO_INCREMENT;

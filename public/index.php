@@ -55,6 +55,9 @@ switch ($page) {
     case 'enrollment-management':
         (new AdminController())->enrollmentManagement();
         break;
+    case 'review-enrollment':
+        (new AdminController())->reviewEnrollment();
+        break;
 
 
 
