@@ -113,7 +113,7 @@
         <!-- Filters -->
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-body">
-                <form method="GET" action="enrollment-management" id="filterForm">
+                <form method="GET" action="enrollments" id="filterForm">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold">Search</label>
@@ -155,7 +155,7 @@
 
                         <div class="col-md-2">
                             <label class="form-label small fw-semibold">&nbsp;</label>
-                            <a href="enrollment-management" class="btn btn-outline-secondary w-100">
+                            <a href="enrollments" class="btn btn-outline-secondary w-100">
                                 <i class="bi bi-x-circle me-1"></i>Clear
                             </a>
                         </div>
@@ -316,7 +316,7 @@
                         <h5 class="mt-3 text-muted">No enrollment requests found</h5>
                         <?php if (!empty($search) || !empty($status_filter) || !empty($grade_filter)): ?>
                             <p class="text-muted">Try adjusting your filters</p>
-                            <a href="enrollment-management?enrollment=<?= urlencode($enrollment_filter) ?>" class="btn btn-outline-primary">
+                            <a href="enrollments?enrollment=<?= urlencode($enrollment_filter) ?>" class="btn btn-outline-primary">
                                 Clear Filters
                             </a>
                         <?php endif; ?>

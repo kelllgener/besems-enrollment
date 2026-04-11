@@ -52,11 +52,14 @@ switch ($page) {
 
 
     // Admin routes
-    case 'enrollment-management':
+    case 'enrollments':
         (new AdminController())->enrollmentManagement();
         break;
     case 'review-enrollment':
         (new AdminController())->reviewEnrollment();
+        break;
+    case 'students':
+        (new AdminController())->studentManagement();
         break;
 
 

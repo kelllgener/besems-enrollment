@@ -87,7 +87,7 @@ class AdminController extends BaseController
         $gradeLevelModel = new GradeLevel();
         $grade_levels = $gradeLevelModel->getAllGradeLevels();
 
-        $this->render('enrollment-management', [
+        $this->render('enrollments', [
             'pageTitle' => 'Enrollment Management - BESEMS',
             'students' => $result['students'],
             'search' => $search,
@@ -111,14 +111,14 @@ class AdminController extends BaseController
         $student_id = $_GET['id'] ?? null;
 
         if (!$student_id) {
-            $this->redirectWithError('enrollment-management', 'Student ID is required');
+            $this->redirectWithError('enrollments', 'Student ID is required');
         }
 
         $studentModel = new Student();
         $student = $studentModel->getStudentById($student_id);
 
         if (!$student) {
-            $this->redirectWithError('enrollment-management', 'Student not found');
+            $this->redirectWithError('enrollments', 'Student not found');
         }
 
         // Handle form submission
@@ -170,7 +170,7 @@ class AdminController extends BaseController
                 $studentModel->assignToSection($student_id, $section_id);
 
                 $this->redirectWithSuccess(
-                    'enrollment-management?enrollment=Approved',
+                    'enrollments?enrollment=Approved',
                     'Enrollment approved successfully!'
                 );
             } else {
@@ -185,7 +185,7 @@ class AdminController extends BaseController
 
             if ($studentModel->updateEnrollmentStatus($student_id, 'Declined', $remarks, $admin_id)) {
                 $this->redirectWithSuccess(
-                    'enrollment-management?enrollment=Declined',
+                    'enrollments?enrollment=Declined',
                     'Enrollment declined'
                 );
             } else {
@@ -200,7 +200,7 @@ class AdminController extends BaseController
 
             if ($studentModel->updateEnrollmentStatus($student_id, 'Incomplete', $remarks, $admin_id)) {
                 $this->redirectWithSuccess(
-                    'enrollment-management?enrollment=Incomplete',
+                    'enrollments?enrollment=Incomplete',
                     'Enrollment marked as incomplete'
                 );
             } else {
@@ -214,7 +214,7 @@ class AdminController extends BaseController
         $this->requireAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: enrollment-management');
+            header('Location: enrollments');
             exit;
         }
 
@@ -222,7 +222,7 @@ class AdminController extends BaseController
         $section_id = $_POST['section_id'] ?? null;
 
         if (!$student_id || !$section_id) {
-            $this->redirectWithError('enrollment-management', 'Invalid request');
+            $this->redirectWithError('enrollments', 'Invalid request');
         }
 
         $admin_id = $this->getCurrentUserId();
@@ -231,15 +231,15 @@ class AdminController extends BaseController
 
         // Check section availability
         if (!$sectionModel->hasAvailableSlots($section_id)) {
-            $this->redirectWithError('enrollment-management', 'Selected section is full');
+            $this->redirectWithError('enrollments', 'Selected section is full');
         }
 
         // Approve and assign
         if ($studentModel->updateEnrollmentStatus($student_id, 'Approved', 'Quick approval', $admin_id)) {
             $studentModel->assignToSection($student_id, $section_id);
-            $this->redirectWithSuccess('enrollment-management', 'Student approved successfully!');
+            $this->redirectWithSuccess('enrollments', 'Student approved successfully!');
         } else {
-            $this->redirectWithError('enrollment-management', 'Failed to approve student');
+            $this->redirectWithError('enrollments', 'Failed to approve student');
         }
     }
 
@@ -285,7 +285,7 @@ class AdminController extends BaseController
         $grade_levels = $gradeLevelModel->getAllGradeLevels();
         $sections = $sectionModel->getAllSections();
 
-        $this->render('admin/student-management', [
+        $this->render('students', [
             'pageTitle' => 'Student Management - BESEMS',
             'students' => $result['students'],
             'search' => $search,
@@ -310,14 +310,14 @@ class AdminController extends BaseController
         $student_id = $_GET['id'] ?? null;
 
         if (!$student_id) {
-            $this->redirectWithError('student-management', 'Student ID is required');
+            $this->redirectWithError('students', 'Student ID is required');
         }
 
         $studentModel = new Student();
         $student = $studentModel->getStudentById($student_id);
 
         if (!$student) {
-            $this->redirectWithError('student-management', 'Student not found');
+            $this->redirectWithError('students', 'Student not found');
         }
 
         $this->render('admin/view-student', [
@@ -333,14 +333,14 @@ class AdminController extends BaseController
         $student_id = $_GET['id'] ?? null;
 
         if (!$student_id) {
-            $this->redirectWithError('student-management', 'Student ID is required');
+            $this->redirectWithError('students', 'Student ID is required');
         }
 
         $studentModel = new Student();
         $student = $studentModel->getStudentById($student_id);
 
         if (!$student) {
-            $this->redirectWithError('student-management', 'Student not found');
+            $this->redirectWithError('students', 'Student not found');
         }
 
         // Handle form submission
@@ -407,7 +407,7 @@ class AdminController extends BaseController
         $this->requireAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: student-management');
+            header('Location: students');
             exit;
         }
 
@@ -415,7 +415,7 @@ class AdminController extends BaseController
         $section_id = $_POST['section_id'] ?? null;
 
         if (!$student_id) {
-            $this->redirectWithError('student-management', 'Student ID is required');
+            $this->redirectWithError('students', 'Student ID is required');
         }
 
         $studentModel = new Student();
@@ -424,23 +424,23 @@ class AdminController extends BaseController
         // If section_id is empty, remove assignment
         if (empty($section_id)) {
             if ($studentModel->assignToSection($student_id, null)) {
-                $this->redirectWithSuccess('student-management', 'Student removed from section');
+                $this->redirectWithSuccess('students', 'Student removed from section');
             } else {
-                $this->redirectWithError('student-management', 'Failed to update assignment');
+                $this->redirectWithError('students', 'Failed to update assignment');
             }
             return;
         }
 
         // Check section availability
         if (!$sectionModel->hasAvailableSlots($section_id)) {
-            $this->redirectWithError('student-management', 'Selected section is full');
+            $this->redirectWithError('students', 'Selected section is full');
         }
 
         // Assign to section
         if ($studentModel->assignToSection($student_id, $section_id)) {
-            $this->redirectWithSuccess('student-management', 'Student assigned successfully!');
+            $this->redirectWithSuccess('students', 'Student assigned successfully!');
         } else {
-            $this->redirectWithError('student-management', 'Failed to assign student');
+            $this->redirectWithError('students', 'Failed to assign student');
         }
     }
 
@@ -449,7 +449,7 @@ class AdminController extends BaseController
         $this->requireAdmin();
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: student-management');
+            header('Location: students');
             exit;
         }
 
@@ -457,20 +457,20 @@ class AdminController extends BaseController
         $status = $_POST['status'] ?? null;
 
         if (!$student_id || !$status) {
-            $this->redirectWithError('student-management', 'Invalid request');
+            $this->redirectWithError('students', 'Invalid request');
         }
 
         $valid_statuses = ['Active', 'Inactive', 'Transferred', 'Graduated', 'Dropped'];
         if (!in_array($status, $valid_statuses)) {
-            $this->redirectWithError('student-management', 'Invalid status');
+            $this->redirectWithError('students', 'Invalid status');
         }
 
         $studentModel = new Student();
 
         if ($studentModel->updateStudentStatus($student_id, $status)) {
-            $this->redirectWithSuccess('student-management', "Student status changed to {$status}");
+            $this->redirectWithSuccess('students', "Student status changed to {$status}");
         } else {
-            $this->redirectWithError('student-management', 'Failed to update status');
+            $this->redirectWithError('students', 'Failed to update status');
         }
     }
 

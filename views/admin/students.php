@@ -111,7 +111,7 @@
         <!-- Filters -->
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-body">
-                <form method="GET" action="student-management" id="filterForm">
+                <form method="GET" action="students" id="filterForm">
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold">Search Students</label>
@@ -168,7 +168,7 @@
 
                         <div class="col-md-2">
                             <label class="form-label small fw-semibold">&nbsp;</label>
-                            <a href="student-management" class="btn btn-outline-secondary w-100">
+                            <a href="students" class="btn btn-outline-secondary w-100">
                                 <i class="bi bi-x-circle me-1"></i>Clear
                             </a>
                         </div>
@@ -432,7 +432,7 @@
                         <h5 class="mt-3 text-muted">No students found</h5>
                         <?php if (!empty($search) || !empty($status_filter) || !empty($grade_filter) || !empty($section_filter)): ?>
                             <p class="text-muted">Try adjusting your filters</p>
-                            <a href="student-management" class="btn btn-outline-primary">Clear Filters</a>
+                            <a href="students" class="btn btn-outline-primary">Clear Filters</a>
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>

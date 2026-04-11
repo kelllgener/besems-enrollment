@@ -8,7 +8,7 @@
                 </h3>
                 <p class="text-muted mb-0">Review student information and requirements</p>
             </div>
-            <a href="enrollment-management" class="btn btn-outline-secondary">
+            <a href="enrollments" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Back to List
             </a>
         </div>
@@ -474,7 +474,7 @@
                                         onclick="return confirm('Are you sure you want to decline this enrollment?')">
                                     <i class="bi bi-x-circle me-2"></i>Decline Enrollment
                                 </button>
-                                <a href="enrollment-management" class="btn btn-outline-secondary">
+                                <a href="enrollments" class="btn btn-outline-secondary">
                                     <i class="bi bi-arrow-left me-2"></i>Back to List
                                 </a>
                             </div>

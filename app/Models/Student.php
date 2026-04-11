@@ -524,6 +524,16 @@ class Student
     // Get all students for admin management
     public function getAllStudentsForManagement($search = '', $status_filter = '', $grade_filter = '', $section_filter = '', $limit = 15, $offset = 0)
     {
+        // Ensure limit and offset are non-negative integers
+        $limit = (int)$limit;
+        $offset = (int)$offset;
+        if ($limit < 1) {
+            $limit = 15;
+        }
+        if ($offset < 0) {
+            $offset = 0;
+        }
+
         $sql = "
         SELECT 
             s.*,
