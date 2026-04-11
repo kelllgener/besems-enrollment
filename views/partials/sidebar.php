@@ -107,22 +107,6 @@ $userRole = $_SESSION['role'] ?? 'user';
             <small class="text-white-50">Enrollment Management System</small>
         </div>
 
-        <!-- User Info -->
-        <div class="p-3 border-bottom border-secondary">
-            <div class="d-flex align-items-center">
-                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
-                    <i class="bi bi-person-fill text-white fs-5"></i>
-                </div>
-                <div class="flex-grow-1 text-truncate">
-                    <div class="text-white fw-semibold small text-truncate"><?= htmlspecialchars($_SESSION['name'] ?? 'User') ?></div>
-                    <div class="text-white-50 d-flex align-items-center small text-capitalize">
-                        <i class="bi bi-circle-fill text-success me-1" style="font-size: 0.5rem;"></i>
-                        <?= htmlspecialchars($userRole) ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Navigation Menu -->
         <div class="flex-grow-1 overflow-auto py-3">
             <ul class="nav flex-column px-2">
@@ -142,6 +126,18 @@ $userRole = $_SESSION['role'] ?? 'user';
                     <?php endif; ?>
                 <?php endforeach; ?>
             </ul>
+        </div>
+
+        <!-- User Info -->
+        <div class="p-3 border-bottom border-secondary">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                    <i class="bi bi-person-fill text-white fs-5"></i>
+                </div>
+                <div class="flex-grow-1 text-truncate">
+                    <div class="text-white fw-semibold small text-truncate"><?= ucfirst(htmlspecialchars($_SESSION['name']) ?? 'User') ?></div>
+                </div>
+            </div>
         </div>
 
         <!-- Logout -->
