@@ -9,7 +9,7 @@
                     <div class="row align-items-center">
                         <div class="col-md-8">
                             <h1 class="display-6 fw-bold mb-2">
-                                <i class="bi bi-speedometer2 me-2"></i>Welcome back, <?= htmlspecialchars($name) ?>!
+                                <i class="bi bi-speedometer2 me-2"></i>Welcome back, <?= ucfirst(htmlspecialchars($name)) ?>!
                             </h1>
                             <p class="lead mb-0 opacity-75">Here's an overview of your enrollment system today.</p>
                             <div class="mt-3 d-flex gap-2">
