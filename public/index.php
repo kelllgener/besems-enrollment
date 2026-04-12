@@ -61,7 +61,12 @@ switch ($page) {
     case 'students':
         (new AdminController())->studentManagement();
         break;
-
+    case 'view-student':
+        (new AdminController())->viewStudent();
+        break;
+    case 'edit-student':
+        (new AdminController())->editStudent();
+        break;
 
 
     // fallback

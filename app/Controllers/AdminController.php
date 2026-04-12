@@ -320,7 +320,7 @@ class AdminController extends BaseController
             $this->redirectWithError('students', 'Student not found');
         }
 
-        $this->render('admin/view-student', [
+        $this->render('view-student', [
             'pageTitle' => 'View Student - BESEMS',
             'student' => $student
         ]);
@@ -348,7 +348,7 @@ class AdminController extends BaseController
             $this->handleEditStudentSubmission($student_id);
         }
 
-        $this->render('admin/edit-student', [
+        $this->render('edit-student', [
             'pageTitle' => 'Edit Student - BESEMS',
             'student' => $student,
             'error_message' => $this->getErrorMessage()
